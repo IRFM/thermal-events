@@ -164,7 +164,8 @@ class HotSpot(Base):
     std_intensity = Column(
         Float,
         default=0,
-        comment="Standard deviation of the apparent temperature in the hot spot, in degree celsius",
+        comment="Standard deviation of the apparent temperature in the hot spot, in "
+        + "degree celsius",
     )
     area = Column(Integer, default=0, comment="The area of the hot spot, in pixel")
     centroid_x = Column(
@@ -179,23 +180,28 @@ class HotSpot(Base):
     )
     polygon = Column(
         String(256),
-        comment="Polygon x0, y0, ..., xn, yn encompassing the hot spot, with the coordinates in pixel",
+        comment="Polygon x0, y0, ..., xn, yn encompassing the hot spot, with the "
+        + "coordinates in pixel",
     )
     quantile_5 = Column(
         String(20),
-        comment="Bounding box x0, y0, w, h of the 5% hottest pixels in the hot spot, with the coordinates in pixel",
+        comment="Bounding box x0, y0, w, h of the 5% hottest pixels in the hot spot, "
+        + "with the coordinates in pixel",
     )
     quantile_10 = Column(
         String(20),
-        comment="Bounding box x0, y0, w, h of the 10% hottest pixels in the hot spot, with the coordinates in pixel",
+        comment="Bounding box x0, y0, w, h of the 10% hottest pixels in the hot spot, "
+        + "with the coordinates in pixel",
     )
     quantile_25 = Column(
         String(20),
-        comment="Bounding box x0, y0, w, h of the 25% hottest pixels in the hot spot, with the coordinates in pixel",
+        comment="Bounding box x0, y0, w, h of the 25% hottest pixels in the hot spot, "
+        + "with the coordinates in pixel",
     )
     quantile_50 = Column(
         String(20),
-        comment="Bounding box x0, y0, w, h of the 50% hottest pixels in the hot spot, with the coordinates in pixel",
+        comment="Bounding box x0, y0, w, h of the 50% hottest pixels in the hot spot, "
+        + "with the coordinates in pixel",
     )
 
     thermal_event = relationship(
@@ -213,6 +219,15 @@ class HotSpot(Base):
         compute_quantiles: bool = False,
         **kwargs,
     ) -> None:
+        """
+        Initialize a HotSpot instance.
+
+        Args:
+            timestamp (Union[int, None], optional): The timestamp. Defaults to None.
+            compute_quantiles (bool, optional): Whether to compute quantiles. Defaults
+                to False.
+            **kwargs: Additional keyword arguments for the HotSpot instance.
+        """
         self.timestamp = int(timestamp)
         self._compute_quantiles = compute_quantiles
         self._confidence = None
@@ -234,17 +249,18 @@ class HotSpot(Base):
         compute_quantiles: bool = False,
         max_points: int = 32,
     ) -> "HotSpot":
-        """Set the hot spot polygon from a binary mask and fill hot spot related members.
-
-        If timestamp is not None, set the hot spot timestamp.
-        If ir_image is not None, set the temperature related members.
+        """
+        Create a HotSpot instance from a binary mask.
 
         Args:
-            mask (np.ndarray): The mask from which the hot spot is created.
+            mask (np.ndarray): The binary mask.
             mask_value (int): The value in the mask that corresponds to the hot spot.
-            timestamp (int, optional): The current timestamp. Defaults to None.
+            timestamp (int, optional): The timestamp. Defaults to None.
             ir_image (np.ndarray, optional): The infrared image. Defaults to None.
-            max_points (int, optional): The maximum number of points of the polygon. Defaults to 32.
+            compute_quantiles (bool, optional): Whether to compute quantiles. Defaults
+                to False.
+            max_points (int, optional): The maximum number of points of the polygon.
+                Defaults to 32.
 
         Returns:
             HotSpot: The instantiated hot spot.
@@ -342,12 +358,15 @@ class HotSpot(Base):
         ir_image: np.ndarray = None,
         compute_quantiles: bool = False,
     ) -> "HotSpot":
-        """Set the hot spot polygon from a polygon and fill hot spot related members.
+        """
+        Create a HotSpot instance from a polygon.
 
         Args:
-            polygon (Union[list, np.ndarray]): The polygon from which to create the hot spot.
-            timestamp (int, optional): The current timestamp. Defaults to None.
+            polygon (Union[list, np.ndarray]): The polygon.
+            timestamp (int, optional): The timestamp. Defaults to None.
             ir_image (np.ndarray, optional): The infrared image. Defaults to None.
+            compute_quantiles (bool, optional): Whether to compute quantiles. Defaults
+                to False.
 
         Returns:
             HotSpot: The instantiated hot spot.
@@ -383,10 +402,12 @@ class HotSpot(Base):
         ir_image: np.ndarray = None,
         compute_quantiles: bool = False,
     ) -> "HotSpot":
-        """Set the hot spot polygon from a rectangle (x, y, w, h) and fill hot spot related members.
+        """Set the hot spot polygon from a rectangle (x, y, w, h) and fill hot spot
+        related members.
 
         Args:
-            polygon (Union[list, np.ndarray]): The rectangle (x, y, w, h) from which to create the hot spot.
+            polygon (Union[list, np.ndarray]): The rectangle (x, y, w, h) from which to
+                create the hot spot.
             timestamp (int, optional): The current timestamp. Defaults to None.
             ir_image (np.ndarray, optional): The infrared image. Defaults to None.
 
@@ -420,11 +441,11 @@ class HotSpot(Base):
         return hot_spot
 
     def set_image(self, ir_image: np.ndarray) -> None:
-        """
-        Assuming that the hot spot members are set, compute the temperature
-        members.
-        """
+        """Set the infrared image and update temperature-related members.
 
+        Args:
+            ir_image (np.ndarray): The infrared image.
+        """
         poly = self.polygon_as_list
 
         # LEGACY
@@ -482,12 +503,15 @@ class HotSpot(Base):
                 setattr(
                     self,
                     f"quantile_{quantile_list[cnt]}",
-                    f"{x_0 + x_0_q} {y_0 + y_0_q} {x_1_q - x_0_q + 1} {y_1_q - y_0_q + 1}",
+                    f"{x_0 + x_0_q} {y_0 + y_0_q} {x_1_q - x_0_q + 1} "
+                    + f"{y_1_q - y_0_q + 1}",
                 )
 
     def return_polygon(self) -> list:
-        """
-        Returns the hot spot closed polygon
+        """Returns the hot spot closed polygon as a list.
+
+        Returns:
+            list: The hot spot closed polygon as a list.
         """
         poly = self.polygon_as_list
         if len(poly) > 0:

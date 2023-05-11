@@ -21,6 +21,8 @@ from .polysimplify import VWSimplifier
 
 
 class ThermalEvent(Base):
+    """Represents a thermal event."""
+
     __tablename__ = "thermal_events"
     id = Column(
         BigIntegerType, primary_key=True, autoincrement=True, index=True, unique=True
@@ -54,7 +56,8 @@ class ThermalEvent(Base):
     thermal_event = Column(String(255), index=True, comment="The type of thermal event")
     is_automatic_detection = Column(
         Boolean,
-        comment="Boolean indicating if the detection was automatic or manual (a manual annotation)",
+        comment="Boolean indicating if the detection was automatic or manual (a "
+        + "manual annotation)",
     )
     maximum = Column(
         Float,
@@ -74,11 +77,13 @@ class ThermalEvent(Base):
     method = Column(String(255), comment="The detection or annotation method")
     polygon = Column(
         String(600),
-        comment="Polygon x0, y0, ..., xn, yn encompassing all the hot spots constituting the thermal event, with the coordinates in pixel",
+        comment="Polygon x0, y0, ..., xn, yn encompassing all the hot spots "
+        + "constituting the thermal event, with the coordinates in pixel",
     )
     user_polygon_proposal = Column(
         String(600),
-        comment="Polygon x0, y0, ..., xn proposed by the annotator, when using the semi-automatic annotation tool",
+        comment="Polygon x0, y0, ..., xn proposed by the annotator, when using "
+        + "the semi-automatic annotation tool",
     )
     confidence = Column(
         Integer,
@@ -99,13 +104,15 @@ class ThermalEvent(Base):
     )
     roi_name = Column(
         String(255),
-        comment="Name of the region of interest (RoI) on which the thermal event occured",
+        comment="Name of the region of interest (RoI) on which the thermal event "
+        + "occured",
     )
     dataset = Column(
         String(64),
         default="1",
         index=True,
-        comment="Dataset to which the thermal event belongs, 1 is the catch-all dataset",
+        comment="Dataset to which the thermal event belongs, 1 is the catch-all "
+        + "dataset",
     )
     analysis_status = Column(
         String(64),
@@ -153,7 +160,30 @@ class ThermalEvent(Base):
         confidence: int = 1,
         **kwargs
     ) -> None:
+        """
+        Initialize a ThermalEvent object.
 
+        Args:
+            pulse (float): Pulse number.
+            line_of_sight (str): Line of sight on which the thermal event occurs.
+            event_name (str): The type of thermal event.
+            is_automatic_detection (bool): Boolean indicating if the detection was
+                automatic or manual.
+            method (str): The detection or annotation method.
+            user (str): Name of the user who created the thermal event.
+            comments (str): Comments describing the thermal event.
+            surname (str): Unique name given to the thermal event.
+            user_polygon_proposal (list): Polygon proposed by the annotator.
+            dataset (Union[str, list]): Dataset to which the thermal event belongs.
+            analysis_status (str): Current status of analysis of the thermal event.
+            confidence (int): Confidence in the detection or annotation.
+
+        Keyword Args:
+            hot_spots (list): List of HotSpot objects associated with the thermal event.
+
+        Returns:
+            None
+        """
         if isinstance(user_polygon_proposal, list):
             # Simplify the polygon if its number of points is greater than the
             # maximum number of points that can be stored in the database
@@ -181,7 +211,7 @@ class ThermalEvent(Base):
         self.surname = surname
         self.user_polygon_proposal = user_polygon_proposal
 
-        # If several datasets are provided in a list, order them and convert them to a string
+        # If several datasets are provided in a list, order and convert them to a string
         if isinstance(dataset, list):
             dataset.sort()
             dataset = ", ".join([str(x) for x in dataset])
@@ -209,6 +239,15 @@ class ThermalEvent(Base):
 
     @classmethod
     def from_json(cls, path_to_file):
+        """
+        Create a ThermalEvent object from a JSON file.
+
+        Args:
+            path_to_file (str): Path to the JSON file.
+
+        Returns:
+            ThermalEvent or list[ThermalEvent]: The created ThermalEvent object(s).
+        """
         with open(path_to_file, "r", encoding="utf-8") as file:
             data = json.load(file)
 
@@ -223,6 +262,15 @@ class ThermalEvent(Base):
 
     @classmethod
     def from_dict(cls, data):
+        """
+        Create a ThermalEvent object from a dictionary.
+
+        Args:
+            data (dict): The dictionary containing the ThermalEvent data.
+
+        Returns:
+            ThermalEvent: The created ThermalEvent object.
+        """
         out = cls(**data)
         hot_spots = [HotSpot(**x) for x in data["hot_spots"]]
         out.hot_spots = hot_spots
@@ -231,17 +279,35 @@ class ThermalEvent(Base):
 
     def add_hot_spot(self, hot_spot: HotSpot) -> None:
         """
-        Add a new hot_spot to this event
+        Add a new hot_spot to an event.
+
+        Args:
+            hot_spot (HotSpot): The HotSpot object to be added.
+
+        Returns:
+            None
         """
         self.hot_spots.append(hot_spot)
 
     def compute_global_polygon(self) -> list:
+        """
+        Compute the global polygon of the thermal event.
+
+        Returns:
+            list: The computed global polygon.
+        """
         return np.squeeze(
             cv2.convexHull(np.vstack([x.polygon_as_list for x in self.hot_spots])),
             axis=1,
         )
 
     def compute(self) -> None:
+        """
+        Perform computation and update relevant attributes of the ThermalEvent object.
+
+        Returns:
+            None
+        """
         if self._computed == len(self.hot_spots):
             # already done
             return
@@ -283,6 +349,15 @@ class ThermalEvent(Base):
         self._computed = len(self.hot_spots)
 
     def to_json(self, path_to_file):
+        """
+        Serialize the ThermalEvent object to a JSON file.
+
+        Args:
+            path_to_file (str): Path to the output JSON file.
+
+        Returns:
+            None
+        """
         from .schemas import ThermalEventSchema
 
         dump_data = ThermalEventSchema().dump(self)
@@ -292,11 +367,18 @@ class ThermalEvent(Base):
 
     @property
     def timestamps(self) -> list:
+        """
+        Get the timestamps of all hot spots.
+
+        Returns:
+            list: The timestamps.
+        """
         return [x.timestamp for x in self.hot_spots]
 
     @property
     def polygon_as_list(self) -> list:
-        """Return the polygon as a list.
+        """
+        Get the polygon as a list.
 
         Returns:
             list: The polygon as a list.
@@ -305,7 +387,8 @@ class ThermalEvent(Base):
 
     @property
     def user_polygon_proposal_as_list(self) -> list:
-        """Return the user's polygon proposal as a list.
+        """
+        Get the user's polygon proposal as a list.
 
         Returns:
             list: The user's polygon proposal as a list.
@@ -314,6 +397,16 @@ class ThermalEvent(Base):
 
     @staticmethod
     def write_events_to_json(path_to_file: str, thermal_events: list):
+        """
+        Write a list of ThermalEvent objects to a JSON file.
+
+        Args:
+            path_to_file (str): Path to the output JSON file.
+            thermal_events (list): List of ThermalEvent objects to be written.
+
+        Returns:
+            None
+        """
         from .schemas import ThermalEventSchema
 
         if not isinstance(thermal_events, list):

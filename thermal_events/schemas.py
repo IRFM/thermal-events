@@ -6,6 +6,8 @@ from .thermal_event import ThermalEvent
 
 
 class HotSpotSchema(SQLAlchemyAutoSchema):
+    """Schema for the HotSpot model."""
+
     class Meta:
         model = HotSpot
         include_relationships = True
@@ -17,6 +19,8 @@ class HotSpotSchema(SQLAlchemyAutoSchema):
 
 
 class ThermalEventSchema(SQLAlchemyAutoSchema):
+    """Schema for the ThermalEvent model."""
+
     hot_spots = RelatedList(Nested(HotSpotSchema))
 
     class Meta:

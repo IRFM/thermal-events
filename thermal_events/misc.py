@@ -4,6 +4,8 @@ from .base import Base
 
 
 class LineOfSight(Base):
+    """Model class representing a line of sight entity."""
+
     __tablename__ = "lines_of_sight"
 
     name = Column(
@@ -17,6 +19,8 @@ class LineOfSight(Base):
 
 
 class ThermalEventType(Base):
+    """Model class representing a type of thermal event entity."""
+
     __tablename__ = "thermal_event_types"
 
     name = Column(
@@ -32,6 +36,9 @@ class ThermalEventType(Base):
 
 
 class ThermalEventTypeLineOfSight(Base):
+    """Model class representing the relationship between thermal event types and
+    lines of sight."""
+
     __tablename__ = "thermal_event_type_lines_of_sight"
 
     thermal_event_type = Column(
@@ -51,6 +58,8 @@ class ThermalEventTypeLineOfSight(Base):
 
 
 class User(Base):
+    """Model class representing a user entity."""
+
     __tablename__ = "users"
 
     name = Column(
@@ -63,6 +72,8 @@ class User(Base):
 
 
 class Dataset(Base):
+    """Model class representing a dataset entity."""
+
     __tablename__ = "datasets"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True, unique=True)
@@ -78,6 +89,8 @@ class Dataset(Base):
 
 
 class AnalysisStatus(Base):
+    """Model class representing an analysis status entity."""
+
     __tablename__ = "analysis_status"
 
     name = Column(

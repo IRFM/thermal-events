@@ -16,6 +16,7 @@ engine = create_engine(
 
 
 def _fk_pragma_on_connect(dbapi_con, con_record):
+    """Enable foreign key support for SQLite connections."""
     dbapi_con.execute("pragma foreign_keys=ON")
 
 
@@ -29,6 +30,7 @@ SessionLocal = sessionmaker(
 
 # Dependency
 def get_db():
+    """Create a new database session."""
     db = SessionLocal()
     try:
         return db
