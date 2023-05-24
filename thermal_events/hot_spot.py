@@ -423,12 +423,12 @@ class HotSpot(Base):
         poly = np.array(
             [
                 [hot_spot.left_box, hot_spot.top_box],
-                [hot_spot.left_box + hot_spot.width_box - 1, hot_spot.top_box],
+                [hot_spot.left_box + hot_spot.width_box, hot_spot.top_box],
                 [
-                    hot_spot.left_box + hot_spot.width_box - 1,
-                    hot_spot.top_box + hot_spot.height_box - 1,
+                    hot_spot.left_box + hot_spot.width_box,
+                    hot_spot.top_box + hot_spot.height_box,
                 ],
-                [hot_spot.left_box, hot_spot.top_box + hot_spot.height_box - 1],
+                [hot_spot.left_box, hot_spot.top_box + hot_spot.height_box],
                 [hot_spot.left_box, hot_spot.top_box],
             ]
         )
