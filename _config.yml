@@ -1,7 +1,10 @@
-theme: jekyll-theme-minimal
+remote_theme: "godalming123/minimal"
+plugins:
+- jekyll-remote-theme # add this line to the plugins list if you already have one
 show_downloads: true
 title: thermal-events
 description: Python library that handles the thermal events and the interaction with the thermal events database of fusion reactors
+color-scheme: dark
 github:
   zip_url: https://github.com/IRFM/thermal-events/zipball/main
   tar_url: https://github.com/IRFM/thermal-events/tarball/main
