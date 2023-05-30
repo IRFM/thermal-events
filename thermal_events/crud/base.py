@@ -74,14 +74,11 @@ class CRUDBase(Generic[ModelType]):
         with session_scope() as session:
             return session.query(self.model).offset(skip).limit(limit).all()
 
-    def create(self, obj_in: Union[list, ModelType]) -> ModelType:
+    def create(self, obj_in: Union[list, ModelType]) -> None:
         """Create a new object or a list of objects.
 
         Args:
             obj_in (Union[list, ModelType]): The object(s) to create.
-
-        Returns:
-            ModelType: The created object.
 
         """
         if not isinstance(obj_in, list):
@@ -90,4 +87,18 @@ class CRUDBase(Generic[ModelType]):
         with session_scope() as session:
             session.add_all(obj_in)
             session.commit()
-            return obj_in
+
+    def update(self, obj_in: Union[ModelType, List[ModelType]]) -> None:
+        """Update an existing object or a list of objects.
+
+        Args:
+            obj_in (Union[ModelType, List[ModelType]]): The object(s) to update.
+
+        """
+        if not isinstance(obj_in, list):
+            obj_in = [obj_in]
+
+        with session_scope() as session:
+            for obj in obj_in:
+                session.merge(obj)
+            session.commit()
