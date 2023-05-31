@@ -297,7 +297,7 @@ class ThermalEvent(Base):
             list: The computed global polygon.
         """
         return np.squeeze(
-            cv2.convexHull(np.vstack([x.polygon_as_list for x in self.hot_spots])),
+            cv2.convexHull(np.vstack([x.return_polygon() for x in self.hot_spots])),
             axis=1,
         )
 
