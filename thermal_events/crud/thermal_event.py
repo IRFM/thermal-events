@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from sqlalchemy import and_, not_, or_
 
@@ -226,6 +226,25 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
             session.query(ThermalEvent).filter_by(id=event_id).update(
                 {"analysis_status": new_status}
             )
+            session.commit()
+
+    def update(self, obj_in: Union[ThermalEvent, List[ThermalEvent]]) -> None:
+        """Update an existing object or a list of ThermalEvent objects.
+
+        Args:
+            obj_in (Union[ThermalEvent, List[ThermalEvent]]): The object(s) to update.
+
+        """
+
+        if not isinstance(obj_in, list):
+            obj_in = [obj_in]
+
+        with session_scope() as session:
+            for obj in obj_in:
+                if len(obj.hot_spots) == 0:
+                    session.delete(obj)
+                else:
+                    session.merge(obj)
             session.commit()
 
     def delete(self, events: Union[list, ThermalEvent, int]):
