@@ -233,7 +233,7 @@ class HotSpot(Base):
         self._confidence = None
 
         for key, value in kwargs.items():
-            if key == "polygon":
+            if key == "polygon" and not isinstance(value, str):
                 value = polygon_to_string(value)
 
             if key != "thermal_event":
