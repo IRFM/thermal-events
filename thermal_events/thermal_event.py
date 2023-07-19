@@ -13,6 +13,7 @@ from sqlalchemy import (
     Integer,
     String,
 )
+from sqlalchemy.dialects.mysql import DOUBLE
 from sqlalchemy.orm import relationship, make_transient
 
 from .base import Base
@@ -27,7 +28,7 @@ class ThermalEvent(Base):
     id = Column(
         BigIntegerType, primary_key=True, autoincrement=True, index=True, unique=True
     )
-    pulse = Column(Float, nullable=False, comment="Pulse number")
+    pulse = Column(DOUBLE, nullable=False, comment="Pulse number")
     line_of_sight = Column(
         String(255),
         index=True,
