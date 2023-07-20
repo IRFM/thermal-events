@@ -14,11 +14,14 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.dialects.mysql import DOUBLE
+from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import relationship, make_transient
 
 from .base import Base
 from .hot_spot import BigIntegerType, HotSpot, polygon_to_string, string_to_polygon
 from .polysimplify import VWSimplifier
+
+DoubleType = DOUBLE(asdecimal=False).with_variant(sqlite.REAL(), "sqlite")
 
 
 class ThermalEvent(Base):
@@ -28,11 +31,14 @@ class ThermalEvent(Base):
     id = Column(
         BigIntegerType, primary_key=True, autoincrement=True, index=True, unique=True
     )
-    pulse = Column(DOUBLE(asdecimal=False), nullable=False, comment="Pulse number")
+    pulse = Column(DoubleType, nullable=False, comment="Pulse number")
     line_of_sight = Column(
         String(255),
         index=True,
         comment="Line of sight on which the thermal event occurs",
+    )
+    device = Column(
+        String(255), ForeignKey("devices.name"), nullable=False, comment="Device name"
     )
     initial_timestamp = Column(
         BigInteger,
@@ -149,6 +155,7 @@ class ThermalEvent(Base):
         self,
         pulse: float = 0,
         line_of_sight: str = str(),
+        device: str = str(),
         event_name: str = str(),
         is_automatic_detection: bool = False,
         method: str = str(),
@@ -167,6 +174,7 @@ class ThermalEvent(Base):
         Args:
             pulse (float): Pulse number.
             line_of_sight (str): Line of sight on which the thermal event occurs.
+            device (str): Device name.
             event_name (str): The type of thermal event.
             is_automatic_detection (bool): Boolean indicating if the detection was
                 automatic or manual.
@@ -204,6 +212,7 @@ class ThermalEvent(Base):
 
         self.pulse = float(pulse)
         self.line_of_sight = line_of_sight
+        self.device = device
         self.thermal_event = event_name
         self.is_automatic_detection = is_automatic_detection
         self.method = method

@@ -4,6 +4,7 @@ from thermal_events import (
     Base,
     LineOfSight,
     ThermalEventType,
+    Device,
     User,
     Dataset,
     AnalysisStatus,
@@ -14,6 +15,17 @@ from thermal_events.database import get_db
 with get_db() as session:
     # Create the tables
     Base.metadata.create_all(session.bind)
+
+    # Create content of table devices
+    session.add_all(
+        [
+            Device(name=name)
+            for name in [
+                "device 1",
+                "device 2",
+            ]
+        ]
+    )
 
     # Create content of table users
     session.add_all(

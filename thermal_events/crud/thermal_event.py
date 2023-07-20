@@ -195,6 +195,23 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
             pulse=float(pulse), line_of_sight=line_of_sight, **kwargs
         )
 
+    def get_by_device(self, device: str, **kwargs):
+        """Retrieve ThermalEvent objects based on device name.
+
+        Args:
+            device (str):
+                Device to match.
+            **kwargs:
+                Additional filter conditions for the query.
+
+        Returns:
+            Union[list, tuple]:
+                Resulting ThermalEvent objects or columns based on the specified
+                device.
+
+        """
+        return self.get_by_columns(dataset=device, **kwargs)
+
     def get_by_dataset(self, dataset: int, **kwargs):
         """Retrieve ThermalEvent objects based on dataset ID.
 
