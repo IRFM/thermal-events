@@ -29,7 +29,9 @@ class ThermalEvent(Base):
         BigIntegerType, primary_key=True, autoincrement=True, index=True, unique=True
     )
     pulse = Column(DOUBLE(asdecimal=False), nullable=False, comment="Pulse number")
-    device = Column(String(255), nullable=False, comment="Device name")
+    device = Column(
+        String(255), ForeignKey("devices.name"), nullable=False, comment="Device name"
+    )
     line_of_sight = Column(
         String(255),
         index=True,
