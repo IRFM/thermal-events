@@ -14,11 +14,14 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.dialects.mysql import DOUBLE
+from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import relationship, make_transient
 
 from .base import Base
 from .hot_spot import BigIntegerType, HotSpot, polygon_to_string, string_to_polygon
 from .polysimplify import VWSimplifier
+
+DoubleType = DOUBLE(asdecimal=False).with_variant(sqlite.REAL(), "sqlite")
 
 
 class ThermalEvent(Base):
@@ -28,7 +31,7 @@ class ThermalEvent(Base):
     id = Column(
         BigIntegerType, primary_key=True, autoincrement=True, index=True, unique=True
     )
-    pulse = Column(DOUBLE(asdecimal=False), nullable=False, comment="Pulse number")
+    pulse = Column(DoubleType, nullable=False, comment="Pulse number")
     line_of_sight = Column(
         String(255),
         index=True,
