@@ -3,6 +3,21 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from .base import Base
 
 
+class Device(Base):
+    """Model class representing a fusion device."""
+
+    __tablename__ = "devices"
+
+    name = Column(
+        String(255),
+        primary_key=True,
+        index=True,
+        unique=True,
+        comment="Name of the device",
+    )
+    description = Column(String(255), comment="Description of the device")
+
+
 class LineOfSight(Base):
     """Model class representing a line of sight entity."""
 

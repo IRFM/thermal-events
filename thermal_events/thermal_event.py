@@ -29,6 +29,7 @@ class ThermalEvent(Base):
         BigIntegerType, primary_key=True, autoincrement=True, index=True, unique=True
     )
     pulse = Column(DOUBLE(asdecimal=False), nullable=False, comment="Pulse number")
+    device = Column(String(255), nullable=False, comment="Device name")
     line_of_sight = Column(
         String(255),
         index=True,
@@ -149,6 +150,7 @@ class ThermalEvent(Base):
         self,
         pulse: float = 0,
         line_of_sight: str = str(),
+        device: str = str(),
         event_name: str = str(),
         is_automatic_detection: bool = False,
         method: str = str(),
@@ -167,6 +169,7 @@ class ThermalEvent(Base):
         Args:
             pulse (float): Pulse number.
             line_of_sight (str): Line of sight on which the thermal event occurs.
+            device (str): Device name.
             event_name (str): The type of thermal event.
             is_automatic_detection (bool): Boolean indicating if the detection was
                 automatic or manual.
@@ -204,6 +207,7 @@ class ThermalEvent(Base):
 
         self.pulse = float(pulse)
         self.line_of_sight = line_of_sight
+        self.device = device
         self.thermal_event = event_name
         self.is_automatic_detection = is_automatic_detection
         self.method = method
