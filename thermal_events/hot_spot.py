@@ -278,11 +278,6 @@ class HotSpot(Base):
         polygon = np.squeeze(max(cnts, key=cv2.contourArea), axis=1)
 
         # If needed, simplify the polygon
-        poly_str_length = len(polygon_to_string(polygon))
-
-        if poly_str_length > max_polygon_length:
-            print("Polygon is too long, simplifying it.")
-
         nb_points = len(polygon) - 1
         simplifier = VWSimplifier(np.array(polygon, dtype=float))
         while len(polygon_to_string(polygon)) > max_polygon_length:
@@ -380,11 +375,6 @@ class HotSpot(Base):
         hot_spot = cls(timestamp=timestamp, compute_quantiles=compute_quantiles)
 
         # If needed, simplify the polygon
-        poly_str_length = len(polygon_to_string(polygon))
-
-        if poly_str_length > max_polygon_length:
-            print("Polygon is too long, simplifying it.")
-
         nb_points = len(polygon) - 1
         simplifier = VWSimplifier(np.array(polygon, dtype=float))
         while len(polygon_to_string(polygon)) > max_polygon_length:
