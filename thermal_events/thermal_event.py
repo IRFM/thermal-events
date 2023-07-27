@@ -373,7 +373,7 @@ class ThermalEvent(Base):
         dump_data = ThermalEventSchema().dump(self)
 
         with open(path_to_file, "w", encoding="utf-8") as file:
-            json.dump(dump_data, file, ensure_ascii=False, indent=4)
+            json.dump(dump_data, file, ensure_ascii=False, separators=(",", ":"))
 
     @property
     def timestamps(self) -> list:
@@ -429,4 +429,4 @@ class ThermalEvent(Base):
             out[ind] = ThermalEventSchema().dump(event)
 
         with open(path_to_file, "w", encoding="utf-8") as file:
-            json.dump(out, file, ensure_ascii=False, indent=4)
+            json.dump(out, file, ensure_ascii=False, separators=(",", ":"))
