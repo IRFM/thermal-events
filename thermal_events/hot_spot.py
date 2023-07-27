@@ -247,7 +247,7 @@ class HotSpot(Base):
         timestamp: int = None,
         ir_image: np.ndarray = None,
         compute_quantiles: bool = False,
-        max_points: int = 32,
+        max_polygon_length: int = 256,
     ) -> "HotSpot":
         """
         Create a HotSpot instance from a binary mask.
@@ -259,8 +259,8 @@ class HotSpot(Base):
             ir_image (np.ndarray, optional): The infrared image. Defaults to None.
             compute_quantiles (bool, optional): Whether to compute quantiles. Defaults
                 to False.
-            max_points (int, optional): The maximum number of points of the polygon.
-                Defaults to 32.
+            max_polygon_length (int, optional): The maximum number of characters used
+                to encode the polygon in the form "x0 y0 x1 y1 ...". Defaults to 256.
 
         Returns:
             HotSpot: The instantiated hot spot.
@@ -275,30 +275,30 @@ class HotSpot(Base):
             cv2.CHAIN_APPROX_NONE,
         )
         # Retain the polygon with the largest area
-        init_poly = np.squeeze(max(cnts, key=cv2.contourArea), axis=1)
+        polygon = np.squeeze(max(cnts, key=cv2.contourArea), axis=1)
 
         # If needed, simplify the polygon
-        poly = init_poly
-        nb_points = max_points
+        poly_str_length = len(polygon_to_string(polygon))
 
-        if len(poly) > max_points:
+        if poly_str_length > max_polygon_length:
             print("Polygon is too long, simplifying it.")
 
-        while len(poly) > max_points:
-            simplifier = VWSimplifier(init_poly.astype(float))
-            poly = simplifier.from_number(max_points)
+        nb_points = len(polygon) - 1
+        simplifier = VWSimplifier(np.array(polygon, dtype=float))
+        while len(polygon_to_string(polygon)) > max_polygon_length:
+            polygon = simplifier.from_number(nb_points).astype(int)
             nb_points -= 1
 
-        poly = np.array(np.round(poly), dtype=np.int32)
+        polygon = np.array(np.round(polygon), dtype=np.int32)
 
         # Remove duplicate rows in the polygon
-        _, idx = np.unique(poly, axis=0, return_index=True)
-        poly = poly[np.sort(idx)]
+        _, idx = np.unique(polygon, axis=0, return_index=True)
+        polygon = polygon[np.sort(idx)]
 
-        hot_spot.polygon = polygon_to_string(poly)
-        rect = polygon_is_rectangle(poly)
+        hot_spot.polygon = polygon_to_string(polygon)
+        rect = polygon_is_rectangle(polygon)
         if rect is None:
-            rect = bounding_rectangle(poly)
+            rect = bounding_rectangle(polygon)
             hot_spot.left_box = int(rect[0])
             hot_spot.top_box = int(rect[1])
             hot_spot.width_box = int(rect[2])
@@ -360,7 +360,7 @@ class HotSpot(Base):
         timestamp: int = None,
         ir_image: np.ndarray = None,
         compute_quantiles: bool = False,
-        max_points: int = 32,
+        max_polygon_length: int = 256,
     ) -> "HotSpot":
         """
         Create a HotSpot instance from a polygon.
@@ -371,8 +371,8 @@ class HotSpot(Base):
             ir_image (np.ndarray, optional): The infrared image. Defaults to None.
             compute_quantiles (bool, optional): Whether to compute quantiles. Defaults
                 to False.
-            max_points (int, optional): The maximum number of points of the polygon.
-                Defaults to 32.
+            max_polygon_length (int, optional): The maximum number of characters used
+                to encode the polygon in the form "x0 y0 x1 y1 ...". Defaults to 256.
 
         Returns:
             HotSpot: The instantiated hot spot.
@@ -380,15 +380,15 @@ class HotSpot(Base):
         hot_spot = cls(timestamp=timestamp, compute_quantiles=compute_quantiles)
 
         # If needed, simplify the polygon
-        init_poly = np.array(polygon)
-        nb_points = max_points
+        poly_str_length = len(polygon_to_string(polygon))
 
-        if len(polygon) > max_points:
+        if poly_str_length > max_polygon_length:
             print("Polygon is too long, simplifying it.")
 
-        while len(polygon) > max_points:
-            simplifier = VWSimplifier(init_poly.astype(float))
-            polygon = simplifier.from_number(max_points)
+        nb_points = len(polygon) - 1
+        simplifier = VWSimplifier(np.array(polygon, dtype=float))
+        while len(polygon_to_string(polygon)) > max_polygon_length:
+            polygon = simplifier.from_number(nb_points).astype(int)
             nb_points -= 1
 
         polygon = np.array(np.round(polygon), dtype=np.int32)
