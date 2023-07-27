@@ -281,6 +281,9 @@ class HotSpot(Base):
         poly = init_poly
         nb_points = max_points
 
+        if len(poly) > max_points:
+            print("Polygon is too long, simplifying it.")
+
         while len(poly) > max_points:
             simplifier = VWSimplifier(init_poly.astype(float))
             poly = simplifier.from_number(max_points)
@@ -357,6 +360,7 @@ class HotSpot(Base):
         timestamp: int = None,
         ir_image: np.ndarray = None,
         compute_quantiles: bool = False,
+        max_points: int = 32,
     ) -> "HotSpot":
         """
         Create a HotSpot instance from a polygon.
@@ -367,11 +371,31 @@ class HotSpot(Base):
             ir_image (np.ndarray, optional): The infrared image. Defaults to None.
             compute_quantiles (bool, optional): Whether to compute quantiles. Defaults
                 to False.
+            max_points (int, optional): The maximum number of points of the polygon.
+                Defaults to 32.
 
         Returns:
             HotSpot: The instantiated hot spot.
         """
         hot_spot = cls(timestamp=timestamp, compute_quantiles=compute_quantiles)
+
+        # If needed, simplify the polygon
+        init_poly = np.array(polygon)
+        nb_points = max_points
+
+        if len(polygon) > max_points:
+            print("Polygon is too long, simplifying it.")
+
+        while len(polygon) > max_points:
+            simplifier = VWSimplifier(init_poly.astype(float))
+            polygon = simplifier.from_number(max_points)
+            nb_points -= 1
+
+        polygon = np.array(np.round(polygon), dtype=np.int32)
+
+        # Remove duplicate rows in the polygon
+        _, idx = np.unique(polygon, axis=0, return_index=True)
+        polygon = polygon[np.sort(idx)]
 
         hot_spot.polygon = polygon_to_string(polygon)
         rect = polygon_is_rectangle(polygon)
