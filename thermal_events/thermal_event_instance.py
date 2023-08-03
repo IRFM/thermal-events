@@ -340,7 +340,7 @@ class ThermalEventInstance(Base):
         Returns:
             ThermalEventInstance: The instantiated thermal event instance.
         """
-        instance = cls(timestamp=timestamp_ns)
+        instance = cls(timestamp_ns=timestamp_ns)
 
         # If needed, simplify the polygon
         nb_points = len(polygon) - 1
@@ -395,7 +395,7 @@ class ThermalEventInstance(Base):
         Returns:
             ThermalEventInstance: The instantiated thermal event instance.
         """
-        instance = cls(timestamp=timestamp_ns)
+        instance = cls(timestamp_ns=timestamp_ns)
 
         instance.timestamp_ns = int(timestamp_ns)
 
