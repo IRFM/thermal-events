@@ -3,12 +3,14 @@ from datetime import datetime
 from thermal_events import (
     Base,
     LineOfSight,
-    ThermalEventType,
+    Category,
     Device,
     User,
     Dataset,
     AnalysisStatus,
-    ThermalEventTypeLineOfSight,
+    ThermalEventCategoryLineOfSight,
+    Method,
+    Severity,
 )
 from thermal_events.database import get_db
 
@@ -23,6 +25,28 @@ with get_db() as session:
             for name in [
                 "device 1",
                 "device 2",
+            ]
+        ]
+    )
+
+    # Create content of table methods
+    session.add_all(
+        [
+            Method(name=name)
+            for name in [
+                "method 1",
+                "method 2",
+            ]
+        ]
+    )
+
+    # Create content of table severity_types
+    session.add_all(
+        [
+            Severity(name=name)
+            for name in [
+                "severity type 1",
+                "severity type 2",
             ]
         ]
     )
@@ -45,33 +69,33 @@ with get_db() as session:
     ]
     session.add_all([LineOfSight(name=name) for name in lines_of_sight])
 
-    # Create content of table thermal_event_types
-    thermal_event_types = [
+    # Create content of table thermal_event_categories
+    thermal_event_categories = [
         "thermal event 1",
         "thermal event 2",
         "thermal event 3",
     ]
-    session.add_all([ThermalEventType(name=name) for name in thermal_event_types])
+    session.add_all([Category(name=name) for name in thermal_event_categories])
 
-    # Compatibility matrix (line of sight, thermal event type)
+    # Compatibility matrix (line of sight, thermal event category)
     compat = [
         [1, 1, 0],
         [1, 0, 1],
     ]
 
-    # Create content of table thermal_event_type_lines_of_sight
-    thermal_event_type_lines_of_sight = []
+    # Create content of table thermal_event_category_lines_of_sight
+    thermal_event_category_lines_of_sight = []
     for ind_los, compat_los in enumerate(compat):
-        for ind_type, flag in enumerate(compat_los):
+        for ind_category, flag in enumerate(compat_los):
             if not flag:
                 continue
-            thermal_event_type_lines_of_sight.append(
-                ThermalEventTypeLineOfSight(
-                    thermal_event_type=thermal_event_types[ind_type],
+            thermal_event_category_lines_of_sight.append(
+                ThermalEventCategoryLineOfSight(
+                    thermal_event_category=thermal_event_categories[ind_category],
                     line_of_sight=lines_of_sight[ind_los],
                 ),
             )
-    session.add_all(thermal_event_type_lines_of_sight)
+    session.add_all(thermal_event_category_lines_of_sight)
 
     # Create content of table datasets
     session.add_all(

@@ -1,27 +1,33 @@
 from .settings import settings
 from .base import Base
-from .hot_spot import HotSpot
+from .thermal_event_instance import ThermalEventInstance
 from .thermal_event import ThermalEvent
 from .misc import (
     Device,
     LineOfSight,
-    ThermalEventType,
-    ThermalEventTypeLineOfSight,
+    Category,
+    ThermalEventCategoryLineOfSight,
     User,
     Dataset,
     AnalysisStatus,
+    Method,
+    Severity,
+    ParentChildRelationship,
 )
 
 __all__ = [
     "settings",
     "Base",
-    "HotSpot",
+    "ThermalEventInstance",
     "ThermalEvent",
     "Device",
     "LineOfSight",
-    "ThermalEventType",
-    "ThermalEventTypeLineOfSight",
+    "Category",
+    "ThermalEventCategoryLineOfSight",
     "User",
     "Dataset",
     "AnalysisStatus",
+    "Method",
+    "Severity",
+    "ParentChildRelationship",
 ]
