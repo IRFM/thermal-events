@@ -92,6 +92,7 @@ class ThermalEvent(Base):
         Float,
         comment="Maximum apparent temperature in the thermal event, in degree celsius",
     )
+    # TODO Add id of corresponding thermal event instance
 
     user = Column(
         String(255),
@@ -240,7 +241,7 @@ class ThermalEvent(Base):
 
         out = []
         for key in data:
-            out.append(ThermalEvent(**data[key]))
+            out.append(cls(**data[key]))
 
         if len(out) == 1:
             out = out[0]
@@ -258,11 +259,7 @@ class ThermalEvent(Base):
         Returns:
             ThermalEvent: The created ThermalEvent object.
         """
-        out = cls(**data)
-        instances = [ThermalEventInstance(**x) for x in data["instances"]]
-        out.instances = instances
-        out.compute()
-        return out
+        return cls(**data)
 
     def add_instance(self, instance: ThermalEventInstance) -> None:
         """
@@ -301,8 +298,8 @@ class ThermalEvent(Base):
                     self.max_temperature_C, s[1].max_temperature_C
                 )
 
-        self.initial_timestamp_ns = int(self.timestamps[0])
-        self.final_timestamp_ns = int(self.timestamps[-1])
+        self.initial_timestamp_ns = int(self.timestamps_ns[0])
+        self.final_timestamp_ns = int(self.timestamps_ns[-1])
         self.duration_ns = self.final_timestamp_ns - self.initial_timestamp_ns
 
         self._computed = True
@@ -317,15 +314,10 @@ class ThermalEvent(Base):
         Returns:
             None
         """
-        from .schemas import ThermalEventSchema
-
-        dump_data = ThermalEventSchema().dump(self)
-
-        with open(path_to_file, "w", encoding="utf-8") as file:
-            json.dump(dump_data, file, ensure_ascii=False, separators=(",", ":"))
+        ThermalEvent.write_events_to_json(path_to_file, self)
 
     @property
-    def timestamps(self) -> list:
+    def timestamps_ns(self) -> list:
         """
         Get the timestamps of all the thermal event's instances.
 
