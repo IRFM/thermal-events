@@ -274,8 +274,17 @@ class ThermalEventInstance(Base):
         self._confidence = None
 
         for key, value in kwargs.items():
-            if key == "polygon" and not isinstance(value, str):
-                value = polygon_to_string(value)
+            if key == "polygon":
+                if not isinstance(value, str):
+                    rect = bounding_rectangle(value)
+                    value = polygon_to_string(value)
+                else:
+                    rect = bounding_rectangle(string_to_polygon(value))
+
+                self.bbox_x = int(rect[0])
+                self.bbox_y = int(rect[1])
+                self.bbox_width = int(rect[2])
+                self.bbox_height = int(rect[3])
 
             if key != "thermal_event":
                 setattr(self, key, value)
@@ -359,15 +368,11 @@ class ThermalEventInstance(Base):
         rect = polygon_is_rectangle(polygon)
         if rect is None:
             rect = bounding_rectangle(polygon)
-            instance.bbox_x = int(rect[0])
-            instance.bbox_y = int(rect[1])
-            instance.bbox_width = int(rect[2])
-            instance.bbox_height = int(rect[3])
-        else:
-            instance.bbox_x = int(rect[0])
-            instance.bbox_y = int(rect[1])
-            instance.bbox_width = int(rect[2])
-            instance.bbox_height = int(rect[3])
+
+        instance.bbox_x = int(rect[0])
+        instance.bbox_y = int(rect[1])
+        instance.bbox_width = int(rect[2])
+        instance.bbox_height = int(rect[3])
 
         if ir_image is not None:
             instance.set_image(ir_image)
@@ -406,13 +411,12 @@ class ThermalEventInstance(Base):
         polygon = np.array(
             [
                 [instance.bbox_x, instance.bbox_y],
-                [instance.bbox_x + instance.bbox_width, instance.bbox_y],
+                [instance.bbox_x + instance.bbox_width - 1, instance.bbox_y],
                 [
-                    instance.bbox_x + instance.bbox_width,
-                    instance.bbox_y + instance.bbox_height,
+                    instance.bbox_x + instance.bbox_width - 1,
+                    instance.bbox_y + instance.bbox_height - 1,
                 ],
-                [instance.bbox_x, instance.bbox_y + instance.bbox_height],
-                [instance.bbox_x, instance.bbox_y],
+                [instance.bbox_x, instance.bbox_y + instance.bbox_height - 1],
             ]
         )
         instance.polygon = polygon_to_string(polygon)
@@ -466,8 +470,6 @@ class ThermalEventInstance(Base):
         """
         poly = self.polygon_as_list
         if len(poly) > 0:
-            if poly[0] != poly[-1]:
-                poly.append(poly[0])
             return poly
 
         # compute polygon from rect
@@ -479,7 +481,6 @@ class ThermalEventInstance(Base):
                 self.bbox_y + self.bbox_height - 1,
             ],
             [self.bbox_x, self.bbox_y + self.bbox_height - 1],
-            [self.bbox_x, self.bbox_y],
         ]
         return res
 
