@@ -1,5 +1,7 @@
 import random
 
+import numpy as np
+
 from thermal_events import ThermalEvent, ThermalEventInstance
 
 lines_of_sight = [
@@ -42,10 +44,7 @@ def random_instance():
     ]
     timestamp = random.randrange(10000)
     instance = ThermalEventInstance.from_rectangle(rect, timestamp)
-
     instance.max_temperature_C = random.randrange(1000)
-    instance.max_T_image_position_x = random.randrange(100)
-    instance.max_T_image_position_y = random.randrange(100)
 
     return instance
 
@@ -108,17 +107,22 @@ def test_to_from_json(tmp_path):
 def test_compute():
     thermal_event = random_event(10)
 
-    assert thermal_event.max_temperature_C == max(
-        [x.max_temperature_C for x in thermal_event.instances]
-    )
-
     min_timestamp = min([x.timestamp_ns for x in thermal_event.instances])
     max_timestamp = max([x.timestamp_ns for x in thermal_event.instances])
     assert thermal_event.initial_timestamp_ns == min_timestamp
     assert thermal_event.final_timestamp_ns == max_timestamp
     assert thermal_event.duration_ns == max_timestamp - min_timestamp
 
-    # TODO Add 2 asserts on max T image position
+    max_ind = np.argmax([x.max_temperature_C for x in thermal_event.instances])
+    assert (
+        thermal_event.max_temperature_C
+        == thermal_event.instances[max_ind].max_temperature_C
+    )
+
+    assert (
+        thermal_event.max_T_timestamp_ns
+        == thermal_event.instances[max_ind].timestamp_ns
+    )
 
 
 def test_timestamps():

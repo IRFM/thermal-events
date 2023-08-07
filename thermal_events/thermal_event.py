@@ -92,7 +92,12 @@ class ThermalEvent(Base):
         Float,
         comment="Maximum apparent temperature in the thermal event, in degree celsius",
     )
-    # TODO Add id of corresponding thermal event instance
+    max_T_timestamp_ns = Column(
+        BigIntegerType,
+        comment="Timestamp of the instance with the maximum apparent temperature, "
+        + "in nanosecond. If several instances share the same global maximum, "
+        + "only the timestamp of the first one is stored",
+    )
 
     user = Column(
         String(255),
@@ -291,12 +296,15 @@ class ThermalEvent(Base):
         sort = sorted(d.items())
         self.instances = []
         self.max_temperature_C = sort[0][1].max_temperature_C
+        self.max_T_timestamp_ns = sort[0][1].timestamp_ns
         for s in sort:
             self.instances.append(s[1])
-            if s[1].max_temperature_C is not None:
-                self.max_temperature_C = max(
-                    self.max_temperature_C, s[1].max_temperature_C
-                )
+            if (
+                s[1].max_temperature_C is not None
+                and s[1].max_temperature_C > self.max_temperature_C
+            ):
+                self.max_temperature_C = s[1].max_temperature_C
+                self.max_T_timestamp_ns = s[1].timestamp_ns
 
         self.initial_timestamp_ns = int(self.timestamps_ns[0])
         self.final_timestamp_ns = int(self.timestamps_ns[-1])
