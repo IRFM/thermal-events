@@ -112,28 +112,28 @@ with get_db() as session:
     session.add_all(
         [
             AnalysisStatus(
-                name="Not Analyzed", description="A thermal event not yet analyzed"
+                name="not analyzed", description="A thermal event not yet analyzed"
             ),
             AnalysisStatus(
-                name="To Analyze", description="A thermal event that should be analyzed"
+                name="to analyze", description="A thermal event that should be analyzed"
             ),
             AnalysisStatus(
-                name="Analyzed (OK)",
+                name="analyzed (ok)",
                 description="A thermal event that has been analyzed, and does "
                 + "not need follow-up analysis",
             ),
             AnalysisStatus(
-                name="Analyzed (follow-up required)",
+                name="analyzed (follow-up required)",
                 description="A thermal event that has been analyzed, but which "
                 + "requires follow-up analysis",
             ),
             AnalysisStatus(
-                name="Detection Error",
+                name="detection error",
                 description="A false positive, a detection which is not a "
                 + "thermal event",
             ),
             AnalysisStatus(
-                name="Detection Problem",
+                name="detection problem",
                 description="A thermal event which is detected, but not properly "
                 + "encompassed, classified and/or tracked",
             ),
