@@ -2,6 +2,36 @@ import random
 
 from thermal_events import ThermalEvent, ThermalEventInstance
 
+lines_of_sight = [
+    "line of sight 1",
+    "line of sight 2",
+]
+devices = [
+    "device 1",
+    "device 2",
+]
+categories = [
+    "thermal event 1",
+    "thermal event 2",
+    "thermal event 3",
+]
+methods = [
+    "method 1",
+    "method 2",
+]
+users = [
+    "user 1",
+    "user 2",
+]
+severity_types = [
+    "severity type 1",
+    "severity type 2",
+]
+analysis_status = [
+    "analysis status 1",
+    "analysis status 2",
+]
+
 
 def random_instance():
     rect = [
@@ -21,7 +51,17 @@ def random_instance():
 
 
 def random_event(n_instances=10):
-    thermal_event = ThermalEvent()  # TODO
+    thermal_event = ThermalEvent(
+        experiment_id=random.randrange(100000),
+        line_of_sight=random.choice(lines_of_sight),
+        device=random.choice(devices),
+        category=random.choice(categories),
+        is_automatic_detection=False,
+        method=random.choice(methods),
+        user=random.choice(users),
+        severity=random.choice(severity_types),
+        analysis_status=random.choice(analysis_status),
+    )
 
     for _ in range(n_instances):
         thermal_event.add_instance(random_instance())
