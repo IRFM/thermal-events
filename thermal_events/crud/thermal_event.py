@@ -86,7 +86,9 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
             return query.all()
 
     def get_by_columns_exclude_time_intervals(self, time_intervals: list, **kwargs):
-        """Retrieve ThermalEvent objects excluding specified time intervals.
+        """Retrieve ThermalEvent objects excluding the ones that begin and end
+        in specified time intervals. If a thermal event has only parts of its
+        timestamps in an interval, it is not excluded.
 
         Args:
             time_intervals (list):
@@ -120,9 +122,9 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
 
                 conds = []
                 if inf is not None:
-                    conds.append(ThermalEvent.initial_timestamp_ns > inf)
+                    conds.append(ThermalEvent.initial_timestamp_ns >= inf)
                 if sup is not None:
-                    conds.append(ThermalEvent.final_timestamp_ns < sup)
+                    conds.append(ThermalEvent.final_timestamp_ns <= sup)
 
                 if len(conds) == 1:
                     conds = conds[0]

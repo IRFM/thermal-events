@@ -118,7 +118,7 @@ class ThermalEvent(Base):
     analysis_status = Column(
         String(64),
         ForeignKey("analysis_status.name"),
-        default="Not Analyzed",
+        default="not analyzed",
         index=True,
         comment="Current status of analysis of the thermal event",
     )
@@ -159,7 +159,7 @@ class ThermalEvent(Base):
         comments: str = str(),
         surname: str = str(),
         dataset: Union[str, list] = "1",
-        analysis_status: str = "Not Analyzed",
+        analysis_status: str = "not analyzed",
         **kwargs
     ) -> None:
         """
