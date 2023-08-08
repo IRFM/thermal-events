@@ -295,13 +295,14 @@ class ThermalEvent(Base):
         # order by timestamp
         sort = sorted(d.items())
         self.instances = []
-        self.max_temperature_C = sort[0][1].max_temperature_C
-        self.max_T_timestamp_ns = sort[0][1].timestamp_ns
+        if sort[0][1].max_temperature_C is not None:
+            self.max_temperature_C = sort[0][1].max_temperature_C
+            self.max_T_timestamp_ns = sort[0][1].timestamp_ns
         for s in sort:
             self.instances.append(s[1])
-            if (
-                s[1].max_temperature_C is not None
-                and s[1].max_temperature_C > self.max_temperature_C
+            if s[1].max_temperature_C is not None and (
+                self.max_temperature_C is None
+                or s[1].max_temperature_C > self.max_temperature_C
             ):
                 self.max_temperature_C = s[1].max_temperature_C
                 self.max_T_timestamp_ns = s[1].timestamp_ns
