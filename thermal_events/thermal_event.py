@@ -157,7 +157,7 @@ class ThermalEvent(Base):
         device: str = str(),
         category: str = str(),
         is_automatic_detection: bool = False,
-        confidence: float = 1.0,
+        confidence: float = 0.0,
         severity: str = str(),
         method: str = str(),
         user: str = str(),
