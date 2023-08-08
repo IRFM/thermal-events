@@ -274,7 +274,7 @@ class ThermalEventInstance(Base):
         self._confidence = None
 
         for key, value in kwargs.items():
-            if key == "polygon":
+            if key == "polygon" and value != "":
                 if not isinstance(value, str):
                     rect = bounding_rectangle(value)
                     value = polygon_to_string(value)
