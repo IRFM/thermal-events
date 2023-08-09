@@ -36,6 +36,7 @@ if "sqlite" in settings.DATABASE_URI:
 
 SessionLocal = sessionmaker(
     bind=engine,
+    expire_on_commit=False,
 )
 
 
