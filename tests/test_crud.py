@@ -1,6 +1,5 @@
 import random
 import shutil
-from copy import deepcopy
 from datetime import date
 from itertools import compress
 
@@ -30,23 +29,43 @@ from .test_thermal_event import (
     devices,
     lines_of_sight,
     methods,
-    random_event,
     severity_types,
     users,
 )
 
+from .test_thermal_event import random_event as _random_event
+
+# Number of different datasets
 NB_DATASETS = 3
+
+# Random matrix encoding the compatibility between the lines of sights and the
+# thermal event categories
+COMPATIBILITY = np.random.choice(
+    a=[False, True], size=(len(lines_of_sight), len(categories))
+)
+
+
+def random_event(*args):
+    return _random_event(*args, COMPATIBILITY)
 
 
 def create_genealogy():
+    """Generate random thermal events, send them to the database and create a
+        random genealogy between the thermal events
+
+    Returns:
+        list: The ids of the randomly created thermal events, sorted
+        numpy.ndarray: A matrix that encodes the parent / child relationship
+            between the thermal events. The rows correspond to parents and the
+            columns to children, so that mat[i, j] == True indicates that
+            thermal event i is a parent of thermal event j
+    """
     thermal_events = []
     for _ in range(10):
         thermal_events.append(random_event(10))
     crud.thermal_event.create(thermal_events)
 
-    with get_db() as session:
-        ids = session.query(ThermalEvent.id).all()
-    ids = sorted([id[0] for id in ids])
+    ids = sorted([x.id for x in thermal_events])
 
     mat = np.random.choice(a=[False, True], size=(len(ids), len(ids)))
     np.fill_diagonal(mat, 0)
@@ -70,22 +89,12 @@ def create_genealogy():
     return ids, mat
 
 
-@pytest.fixture(autouse=True)
-def reset_temporary_database():
-    yield
-
-    # Clear the database
-    with get_db() as session:
-        # Ensure we work with the test database before emptying tables
-        assert "test_database.sqlite" in str(session.bind.url)
-
-        session.query(ParentChildRelationship).delete()
-        session.query(ThermalEvent).delete()
-        session.commit()
-
-
 @pytest.fixture(scope="session", autouse=True)
 def create_and_delete_temporary_database():
+    """Create an temporary SQLITE database at the beginning of the test session,
+    with all the necessary tables and values, and delete the database file at the
+    end of the session
+    """
     users.append(crud.user._user_name())
 
     with get_db() as session:
@@ -98,8 +107,10 @@ def create_and_delete_temporary_database():
         session.add_all([Device(name=x) for x in devices])
         session.add_all([Category(name=x) for x in categories])
         categories_lines_of_sight = []
-        for category in categories:
-            for line_of_sight in lines_of_sight:
+        for ind_category, category in enumerate(categories):
+            for ind_los, line_of_sight in enumerate(lines_of_sight):
+                if not COMPATIBILITY[ind_los, ind_category]:
+                    continue
                 categories_lines_of_sight.append(
                     ThermalEventCategoryLineOfSight(
                         thermal_event_category=category, line_of_sight=line_of_sight
@@ -125,108 +136,114 @@ def create_and_delete_temporary_database():
     shutil.rmtree(temp_folder_path)
 
 
-def test_thermal_event_create_read():
-    thermal_event = random_event(10)
+@pytest.fixture(autouse=True)
+def reset_temporary_database():
+    """Reset the temporary database after each test by emptying the tables linked
+    to the thermal events (thermal_events, thermal_events_instances,
+    thermal_events_genealogy)
+    """
+    yield
 
-    # Make a copy of the thermal event (the original one is destroyed during the upload)
-    thermal_event_write = deepcopy(thermal_event)
+    # Clear the database
+    with get_db() as session:
+        # Ensure we work with the test database before emptying tables
+        assert "test_database.sqlite" in str(session.bind.url)
+
+        session.query(ParentChildRelationship).delete()
+        session.query(ThermalEvent).delete()
+        session.commit()
+
+
+def test_thermal_event_create_read():
+    # Generate a random thermal event
+    expected = random_event(10)
 
     # Send the thermal event to the database
-    crud.thermal_event.create(thermal_event)
-
-    # Find the event's id
-    with get_db() as session:
-        id = session.query(ThermalEvent.id).order_by(ThermalEvent.id.desc()).first()[0]
+    crud.thermal_event.create(expected)
 
     # Read the thermal event from the database
-    thermal_event_read = crud.thermal_event.get(id)
+    actual = crud.thermal_event.get(expected.id)
 
-    assert (
-        thermal_event_write.initial_timestamp_ns
-        == thermal_event_read.initial_timestamp_ns
-    )
-    assert (
-        thermal_event_write.final_timestamp_ns == thermal_event_read.final_timestamp_ns
-    )
-    assert thermal_event_write.duration_ns == thermal_event_read.duration_ns
-    assert thermal_event_write.max_temperature_C == thermal_event_read.max_temperature_C
-    assert len(thermal_event_write.instances) == len(thermal_event_read.instances)
+    assert expected.initial_timestamp_ns == actual.initial_timestamp_ns
+    assert expected.final_timestamp_ns == actual.final_timestamp_ns
+    assert expected.duration_ns == actual.duration_ns
+    assert expected.max_temperature_C == actual.max_temperature_C
+    assert len(expected.instances) == len(actual.instances)
 
 
 def test_thermal_event_get_multi():
+    # Generate random thermal events
     nb = 5
     thermal_events = [random_event(10) for _ in range(nb)]
 
+    # Send the thermal events to the database
     crud.thermal_event.create(thermal_events)
 
-    with get_db() as session:
-        ids = (
-            session.query(ThermalEvent.id)
-            .order_by(ThermalEvent.id.asc())
-            .limit(nb)
-            .all()
-        )
-        ids = sorted([x[0] for x in ids])
+    # Store their ids
+    expected = [x.id for x in thermal_events]
 
+    # Retrieve the thermal events and their ids
     thermal_events_read = crud.thermal_event.get_multi(limit=nb)
+    actual = [x.id for x in thermal_events_read]
 
-    assert [x.id for x in thermal_events_read] == ids
+    assert actual == expected
 
 
 def test_thermal_event_update():
+    # Generate a random thermal event
     thermal_event = random_event(10)
 
     # Send the thermal event to the database
     crud.thermal_event.create(thermal_event)
 
-    # Update the event
-    with get_db() as session:
-        thermal_event = (
-            session.query(ThermalEvent).order_by(ThermalEvent.id.desc()).first()
-        )
-
-    new_method = random.choice(methods)
-    thermal_event.method = new_method
+    # Update its method with a different, randomly chosen one
+    expected = random.choice([m for m in methods if m != thermal_event.method])
+    thermal_event.method = expected
     crud.thermal_event.update(thermal_event)
 
-    # Find the event's id
-    with get_db() as session:
-        thermal_event_read = (
-            session.query(ThermalEvent).order_by(ThermalEvent.id.desc()).first()
-        )
+    # Retriveve the event and check if its method has been updated
+    thermal_event_db = crud.thermal_event.get(thermal_event.id)
 
-    assert thermal_event_read.method == new_method
+    assert thermal_event_db.method == expected
 
-    # Delete the event through an update
-    thermal_event_read.instances = []
-    crud.thermal_event.update(thermal_event_read)
+    # Delete the event through an update by emptying its instances
+    thermal_event_db.instances = []
+    crud.thermal_event.update(thermal_event_db)
+
+    assert crud.thermal_event.get(thermal_event_db.id) is None
 
 
 def test_thermal_event_delete():
+    # Generate a random thermal event
     thermal_event = random_event(10)
 
     # Send the thermal event to the database
     crud.thermal_event.create(thermal_event)
 
-    # Find the event's id
-    with get_db() as session:
-        id = session.query(ThermalEvent.id).order_by(ThermalEvent.id.desc()).first()[0]
+    # Delete the event and check it is deleted in the database
+    crud.thermal_event.delete(thermal_event)
 
-    # Delete the event
-    crud.thermal_event.delete(id)
-
-    assert crud.thermal_event.get(id) is None
+    assert crud.thermal_event.get(thermal_event.id) is None
 
 
 def test_thermal_event_get_by_columns():
+    # Generate a random thermal event with specific values for some attributes
     thermal_event = random_event(10)
+
+    line_of_sight = random.choice(lines_of_sight)
+    category = random.choice(
+        list(
+            compress(categories, COMPATIBILITY[lines_of_sight.index(line_of_sight), :])
+        )
+    )
 
     thermal_event.user = users[0]
     thermal_event.experiment_id = 123
     thermal_event.method = methods[0]
-    thermal_event.line_of_sight = lines_of_sight[0]
-    thermal_event.category = categories[0]
+    thermal_event.line_of_sight = line_of_sight
+    thermal_event.category = category
 
+    # Send the thermal event to the database
     crud.thermal_event.create(thermal_event)
 
     events = crud.thermal_event.get_by_columns(user=users[0])
@@ -247,12 +264,13 @@ def test_thermal_event_get_by_columns():
     assert len(ids) == 0
 
     events = crud.thermal_event.get_by_columns(
-        dataset="1", line_of_sight=lines_of_sight[0], category=categories[0]
+        dataset="1", line_of_sight=line_of_sight, category=category
     )
     assert len(events) == 1
 
 
 def test_thermal_event_get_by_columns_exclude_time_intervals():
+    # Generate random thermal events with different initial and final timestamps
     thermal_events = []
     thermal_events.append(random_event(10))
     thermal_events[-1].initial_timestamp_ns = 10
@@ -266,6 +284,7 @@ def test_thermal_event_get_by_columns_exclude_time_intervals():
     thermal_events[-1].initial_timestamp_ns = 25
     thermal_events[-1].final_timestamp_ns = 50
 
+    # Send the thermal events to the database
     crud.thermal_event.create(thermal_events)
 
     events = crud.thermal_event.get_by_columns_exclude_time_intervals(
@@ -287,21 +306,27 @@ def test_thermal_event_get_by_columns_exclude_time_intervals():
 
 
 def test_thermal_event_get_by_experiment_id():
+    # Create random thermal events with different experiment ids
     thermal_events = []
     for experiment_id in range(100, 140):
         thermal_events.append(random_event(10))
         thermal_events[-1].experiment_id = experiment_id
 
+    # Send the thermal events to the database
     crud.thermal_event.create(thermal_events)
 
-    id = crud.thermal_event.get_by_experiment_id(100, return_columns=["id"])
-    assert len(id) == 1
+    expected = [x.id for x in thermal_events if x.experiment_id == 100]
+    actual = crud.thermal_event.get_by_experiment_id(100, return_columns=["id"])
+    assert actual == expected
 
+    expected = [x.id for x in thermal_events if 120 <= x.experiment_id <= 130]
     events = crud.thermal_event.get_by_experiment_id(120, 130)
-    assert len(events) == 11
+    actual = [x.id for x in events]
+    assert actual == expected
 
 
 def test_thermal_event_get_by_experiment_id_line_of_sight():
+    # Create random thermal events with different experiment ids and lines of sight
     ids = [100, 101]
     id_counts = [random.randrange(10) for _ in ids]
 
@@ -312,12 +337,19 @@ def test_thermal_event_get_by_experiment_id_line_of_sight():
             thermal_events[-1].experiment_id = experiment_id
             thermal_events[-1].line_of_sight = lines_of_sight[0]
 
+    # Send the thermal events to the database
     crud.thermal_event.create(thermal_events)
 
-    id = crud.thermal_event.get_by_experiment_id_line_of_sight(
+    expected = [
+        x.id
+        for x in thermal_events
+        if x.experiment_id == ids[0]
+        if x.line_of_sight == lines_of_sight[0]
+    ]
+    actual = crud.thermal_event.get_by_experiment_id_line_of_sight(
         ids[0], lines_of_sight[0], return_columns=["id"]
     )
-    assert len(id) == id_counts[0]
+    assert actual == expected
 
     events = crud.thermal_event.get_by_experiment_id_line_of_sight(
         ids[1], lines_of_sight[1]
@@ -326,6 +358,7 @@ def test_thermal_event_get_by_experiment_id_line_of_sight():
 
 
 def test_thermal_event_get_by_device():
+    # Generate random thermal events with different devices
     device_counts = [random.randrange(10) for _ in devices]
 
     thermal_events = []
@@ -334,14 +367,17 @@ def test_thermal_event_get_by_device():
             thermal_events.append(random_event(10))
             thermal_events[-1].device = device
 
+    # Send the thermal events to the database
     crud.thermal_event.create(thermal_events)
 
     for ind, device in enumerate(devices):
-        ids = crud.thermal_event.get_by_device(device, return_columns=["id"])
-        assert len(ids) == device_counts[ind]
+        expected = [x.id for x in thermal_events if x.device == device]
+        actual = crud.thermal_event.get_by_device(device, return_columns=["id"])
+        assert actual == expected
 
 
 def test_thermal_event_get_by_dataset():
+    # Generate random thermal events with different datasets
     datasets = ["1", "2", "3", "1, 2", "2, 3"]
     dataset_counts = [random.randrange(1, 10) for _ in datasets]
 
@@ -351,37 +387,30 @@ def test_thermal_event_get_by_dataset():
             thermal_events.append(random_event(10))
             thermal_events[-1].dataset = dataset
 
+    # Send the thermal events to the database
     crud.thermal_event.create(thermal_events)
 
     for ind, dataset in enumerate(datasets):
-        ids = crud.thermal_event.get_by_dataset(dataset, return_columns=["id"])
-        if len(dataset) == 1:
-            # Compute the numbers of thermal events with the id in their dataset,
-            # covering the case where an event belongs to multiple datasets
-            expected = sum(
-                [
-                    dataset_counts[i]
-                    for i in range(len(datasets))
-                    if dataset in datasets[i]
-                ]
-            )
-        else:
-            expected = dataset_counts[ind]
-        assert len(ids) == expected
+        expected = [x.id for x in thermal_events if dataset in x.dataset]
+
+        actual = crud.thermal_event.get_by_dataset(dataset, return_columns=["id"])
+        assert sorted(actual) == sorted(expected)
 
 
 def test_thermal_event_get_parents_of_thermal_event():
+    # Create random thermal events with random parent/child relationships
     ids, mat = create_genealogy()
 
     for ind, id in enumerate(ids):
         parents = crud.thermal_event.get_parents_of_thermal_event(id)
-        actual = [x.id for x in parents]
         expected = list(compress(ids, mat[:, ind]))
+        actual = [x.id for x in parents]
 
         assert actual == expected
 
 
 def test_thermal_event_get_children_of_thermal_event():
+    # Create random thermal events with random parent/child relationships
     ids, mat = create_genealogy()
 
     for ind, id in enumerate(ids):
@@ -393,58 +422,70 @@ def test_thermal_event_get_children_of_thermal_event():
 
 
 def test_thermal_event_change_analysis_status():
+    # Create a random thermal event
     thermal_event = random_event(10)
 
-    thermal_event.analysis_status = analysis_status[0]
+    # Send the thermal event to the database
     crud.thermal_event.create(thermal_event)
 
-    # Find the event's id
-    with get_db() as session:
-        id = session.query(ThermalEvent.id).order_by(ThermalEvent.id.desc()).first()[0]
-
-    expected = analysis_status[1]
-    crud.thermal_event.change_analysis_status(id, expected)
+    # Change the status with a random one
+    expected = random.choice(
+        [m for m in analysis_status if m != thermal_event.analysis_status]
+    )
+    crud.thermal_event.change_analysis_status(thermal_event.id, expected)
 
     actual = crud.thermal_event.get_by_columns(
-        id=id, return_columns=["analysis_status"]
+        id=thermal_event.id, return_columns=["analysis_status"]
     )[0]
 
     assert actual == expected
 
 
 def test_user():
+    # Check the users list
     assert crud.user.list() == sorted(users, key=lambda s: s.lower())
 
+    # Check that the current user has read and write rights
     assert crud.user.has_read_rights()
     assert crud.user.has_write_rights()
 
 
 def test_thermal_event_category():
+    # Check the categories list
     assert crud.thermal_event_category.list() == categories
 
-    los = crud.thermal_event_category.compatible_lines_of_sight(categories[0])
-    assert los == lines_of_sight
+    # Check the compatibilities between lines of sight and thermal event categories
+    for ind, category in enumerate(categories):
+        expected = list(compress(lines_of_sight, COMPATIBILITY[:, ind]))
+        actual = crud.thermal_event_category.compatible_lines_of_sight(category)
+        assert actual == expected
 
 
 def test_dataset():
+    # Check the number of datasets
     assert len(crud.dataset.list()) == NB_DATASETS
 
 
 def test_analysis_status():
+    # Check the analysis status list
     assert crud.analysis_status.list() == analysis_status
 
 
 def test_line_of_sight():
+    # Check the lines of sight list
     assert crud.line_of_sight.list() == lines_of_sight
 
 
 def test_method():
+    # Check the methods list
     assert crud.method.list() == methods
 
 
 def test_device():
+    # Check the devices list
     assert crud.device.list() == devices
 
 
 def test_severity():
+    # Check the severity types list
     assert crud.severity.list() == severity_types

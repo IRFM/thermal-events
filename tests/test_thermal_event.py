@@ -1,4 +1,5 @@
 import random
+from itertools import compress
 
 import numpy as np
 
@@ -36,25 +37,37 @@ analysis_status = [
 
 
 def random_instance():
+    # Generate a thermal event instance with random bounding box, timestamp and
+    # maximum temperature
     rect = [
         random.randrange(100),
         random.randrange(100),
         random.randrange(50) + 1,
         random.randrange(50) + 1,
     ]
-    timestamp = random.randrange(10000)
-    instance = ThermalEventInstance.from_rectangle(rect, timestamp)
+    timestamp_ns = random.randrange(10000)
+    instance = ThermalEventInstance.from_rectangle(rect, timestamp_ns)
     instance.max_temperature_C = random.randrange(1000)
 
     return instance
 
 
-def random_event(n_instances=10):
+def random_event(n_instances=10, compat=None):
+    # Generate a thermal event with random attributes and instances
+    if compat is None:
+        compat = np.ones((len(lines_of_sight), len(categories)), dtype=bool)
+
+    # Pick a couple (line_of_sight, category) compatible with the compatibility matrix
+    line_of_sight = random.choice(lines_of_sight)
+    category = random.choice(
+        list(compress(categories, compat[lines_of_sight.index(line_of_sight), :]))
+    )
+
     thermal_event = ThermalEvent(
         experiment_id=random.randrange(100000),
-        line_of_sight=random.choice(lines_of_sight),
+        line_of_sight=line_of_sight,
         device=random.choice(devices),
-        category=random.choice(categories),
+        category=category,
         is_automatic_detection=False,
         method=random.choice(methods),
         user=random.choice(users),
