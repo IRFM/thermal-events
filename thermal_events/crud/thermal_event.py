@@ -172,8 +172,18 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
                     ThermalEvent.experiment_id.between(int(id_inf), int(id_sup))
                 )
 
-            if "return_columns" in kwargs and kwargs["return_columns"] != []:
-                return [list(x) for x in zip(*query.all())]
+            if "return_columns" in kwargs and isinstance(
+                kwargs["return_columns"], list
+            ):
+                out = tuple(list(x) for x in zip(*query.all()))
+
+                # Case then the result of the query is empty
+                if len(out) == 0:
+                    out = tuple([] for _ in range(len(kwargs["return_columns"])))
+
+                if len(out) == 1:
+                    out = out[0]
+                return out
             return query.all()
 
     def get_by_experiment_id_line_of_sight(
