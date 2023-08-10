@@ -4,7 +4,7 @@ from typing import Union
 from sqlalchemy import (
     Boolean,
     Column,
-    Float,
+    Integer,
     ForeignKey,
     ForeignKeyConstraint,
     String,
@@ -89,7 +89,7 @@ class ThermalEvent(Base):
     )
 
     max_temperature_C = Column(
-        Float,
+        Integer,
         comment="Maximum apparent temperature in the thermal event, in degree celsius",
     )
     max_T_timestamp_ns = Column(
