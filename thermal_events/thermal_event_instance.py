@@ -352,11 +352,12 @@ class ThermalEventInstance(Base):
         instance = cls(timestamp_ns=timestamp_ns)
 
         # If needed, simplify the polygon
-        nb_points = len(polygon) - 1
-        simplifier = VWSimplifier(np.array(polygon, dtype=float))
-        while len(polygon_to_string(polygon)) > max_polygon_string_length:
-            polygon = simplifier.from_number(nb_points).astype(int)
-            nb_points -= 1
+        if len(polygon_to_string(polygon)) > max_polygon_string_length:
+            nb_points = len(polygon) - 1
+            simplifier = VWSimplifier(np.array(polygon, dtype=float))
+            while len(polygon_to_string(polygon)) > max_polygon_string_length:
+                polygon = simplifier.from_number(nb_points).astype(int)
+                nb_points -= 1
 
         polygon = np.array(np.round(polygon), dtype=np.int32)
 
