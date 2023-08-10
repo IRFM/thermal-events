@@ -40,9 +40,12 @@ NB_DATASETS = 3
 
 # Random matrix encoding the compatibility between the lines of sights and the
 # thermal event categories
-COMPATIBILITY = np.random.choice(
-    a=[False, True], size=(len(lines_of_sight), len(categories))
-)
+rows = len(lines_of_sight)
+cols = len(categories)
+COMPATIBILITY = np.random.randint(0, 2, size=(rows, cols), dtype=bool)
+row_sums = COMPATIBILITY.sum(axis=1)
+row_indices = np.where(row_sums == 0)
+COMPATIBILITY[row_indices, np.random.randint(0, cols, len(row_indices))] = True
 
 
 def random_event(*args):
@@ -328,14 +331,26 @@ def test_thermal_event_get_by_experiment_id():
 def test_thermal_event_get_by_experiment_id_line_of_sight():
     # Create random thermal events with different experiment ids and lines of sight
     ids = [100, 101]
-    id_counts = [random.randrange(10) for _ in ids]
+    id_counts = [random.randrange(1, 10) for _ in ids]
 
     thermal_events = []
     for ind, experiment_id in enumerate(ids):
         for _ in range(id_counts[ind]):
-            thermal_events.append(random_event(10))
-            thermal_events[-1].experiment_id = experiment_id
-            thermal_events[-1].line_of_sight = lines_of_sight[0]
+            thermal_event = random_event(10)
+            thermal_event.experiment_id = experiment_id
+            thermal_event.line_of_sight = lines_of_sight[0]
+            category = random.choice(
+                list(
+                    compress(
+                        categories,
+                        COMPATIBILITY[
+                            lines_of_sight.index(thermal_event.line_of_sight), :
+                        ],
+                    )
+                )
+            )
+            thermal_event.category = category
+            thermal_events.append(thermal_event)
 
     # Send the thermal events to the database
     crud.thermal_event.create(thermal_events)
