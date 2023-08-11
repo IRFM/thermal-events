@@ -23,8 +23,8 @@ methods = [
     "method 2",
 ]
 users = [
-    "user 1",
-    "user 2",
+    ["user 1", "user_1@domain.org"],
+    ["user 2", "user_2@domain.org"],
 ]
 severity_types = [
     "severity type 1",
@@ -70,7 +70,7 @@ def random_event(n_instances=10, compat=None):
         category=category,
         is_automatic_detection=False,
         method=random.choice(methods),
-        user=random.choice(users),
+        user=random.choice([x[0] for x in users]),
         severity=random.choice(severity_types),
         analysis_status=random.choice(analysis_status),
     )

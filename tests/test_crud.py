@@ -98,7 +98,7 @@ def create_and_delete_temporary_database():
     with all the necessary tables and values, and delete the database file at the
     end of the session
     """
-    users.append(crud.user._user_name())
+    users.append([crud.user._user_name(), "current_user@domain.org"])
 
     with get_db() as session:
         # Ensure we work with a test database before creating tables
@@ -121,7 +121,7 @@ def create_and_delete_temporary_database():
                 )
         session.add_all(categories_lines_of_sight)
         session.add_all([Method(name=x) for x in methods])
-        session.add_all([User(name=x) for x in users])
+        session.add_all([User(name=x[0], email=x[1]) for x in users])
         session.add_all([Severity(name=x) for x in severity_types])
         session.add_all([AnalysisStatus(name=x) for x in analysis_status])
         session.add_all(
@@ -240,7 +240,7 @@ def test_thermal_event_get_by_columns():
         )
     )
 
-    thermal_event.user = users[0]
+    thermal_event.user = users[0][0]
     thermal_event.experiment_id = 123
     thermal_event.method = methods[0]
     thermal_event.line_of_sight = line_of_sight
@@ -249,7 +249,7 @@ def test_thermal_event_get_by_columns():
     # Send the thermal event to the database
     crud.thermal_event.create(thermal_event)
 
-    events = crud.thermal_event.get_by_columns(user=users[0])
+    events = crud.thermal_event.get_by_columns(user=users[0][0])
     assert len(events) == 1
 
     ids = crud.thermal_event.get_by_columns(experiment_id=123, return_columns=["id"])
@@ -458,11 +458,16 @@ def test_thermal_event_change_analysis_status():
 
 def test_user():
     # Check the users list
-    assert crud.user.list() == sorted(users, key=lambda s: s.lower())
+    assert crud.user.list() == sorted([x[0] for x in users], key=lambda s: s.lower())
 
     # Check that the current user has read and write rights
     assert crud.user.has_read_rights()
     assert crud.user.has_write_rights()
+
+    # Check that the user's email address is correctly retrieved
+    assert crud.user.email_address(users[0][0]) == users[0][1]
+    assert crud.user.email_address(crud.user._user_name()) == users[-1][1]
+    assert crud.user.email_address("fake user") is None
 
 
 def test_thermal_event_category():

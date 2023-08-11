@@ -26,6 +26,21 @@ class CRUDUser(CRUDBase[User]):
             res = session.query(User.name).all()
             return [x[0] for x in res]
 
+    def email_address(self, user):
+        """Return the email address of a user.
+
+        Args:
+            user (str): The name of the user
+
+        Returns:
+            str: The email address of the user. Returns None if the user does not exist
+        """
+        with session_scope() as session:
+            res = session.query(User.email).filter(User.name == user).first()
+            if res is not None:
+                res = res[0]
+            return res
+
     def has_write_rights(self):
         """Check if the current user has write rights.
 
