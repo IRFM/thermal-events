@@ -1,15 +1,15 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow_sqlalchemy.fields import Nested, RelatedList
 from marshmallow import fields
-from .hot_spot import HotSpot
+from .thermal_event_instance import ThermalEventInstance
 from .thermal_event import ThermalEvent
 
 
-class HotSpotSchema(SQLAlchemyAutoSchema):
-    """Schema for the HotSpot model."""
+class ThermalEventInstanceSchema(SQLAlchemyAutoSchema):
+    """Schema for the ThermalEventInstance model."""
 
     class Meta:
-        model = HotSpot
+        model = ThermalEventInstance
         include_relationships = True
         include_fk = True
         load_instance = True
@@ -21,7 +21,7 @@ class HotSpotSchema(SQLAlchemyAutoSchema):
 class ThermalEventSchema(SQLAlchemyAutoSchema):
     """Schema for the ThermalEvent model."""
 
-    hot_spots = RelatedList(Nested(HotSpotSchema))
+    instances = RelatedList(Nested(ThermalEventInstanceSchema))
 
     class Meta:
         model = ThermalEvent

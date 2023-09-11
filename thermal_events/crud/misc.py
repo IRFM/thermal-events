@@ -1,11 +1,14 @@
 from thermal_events.crud.base import CRUDBase, session_scope
 from thermal_events import (
     LineOfSight,
-    ThermalEventType,
-    ThermalEventTypeLineOfSight,
+    Category,
+    ThermalEventCategoryLineOfSight,
     User,
     Dataset,
     AnalysisStatus,
+    Method,
+    Device,
+    Severity,
 )
 
 
@@ -22,6 +25,21 @@ class CRUDUser(CRUDBase[User]):
         with session_scope() as session:
             res = session.query(User.name).all()
             return [x[0] for x in res]
+
+    def email_address(self, user):
+        """Return the email address of a user.
+
+        Args:
+            user (str): The name of the user
+
+        Returns:
+            str: The email address of the user. Returns None if the user does not exist
+        """
+        with session_scope() as session:
+            res = session.query(User.email).filter(User.name == user).first()
+            if res is not None:
+                res = res[0]
+            return res
 
     def has_write_rights(self):
         """Check if the current user has write rights.
@@ -57,8 +75,8 @@ class CRUDUser(CRUDBase[User]):
         return getpass.getuser()
 
 
-class CRUDThermalEventType(CRUDBase[ThermalEventType]):
-    """CRUD operations for ThermalEventType objects."""
+class CRUDThermalEventCategory(CRUDBase[Category]):
+    """CRUD operations for ThermalEventCategory objects."""
 
     def list(self):
         """List all thermal event types.
@@ -68,14 +86,14 @@ class CRUDThermalEventType(CRUDBase[ThermalEventType]):
 
         """
         with session_scope() as session:
-            res = session.query(ThermalEventType.name).all()
+            res = session.query(Category.name).all()
             return [x[0] for x in res]
 
-    def compatible_lines_of_sight(self, thermal_event: str):
-        """Get the compatible lines of sight for a given thermal event type.
+    def compatible_lines_of_sight(self, category: str):
+        """Get the compatible lines of sight for a given thermal event category.
 
         Args:
-            thermal_event (str): The thermal event type.
+            category (str): The thermal event category.
 
         Returns:
             List[str]: The list of compatible lines of sight.
@@ -83,8 +101,8 @@ class CRUDThermalEventType(CRUDBase[ThermalEventType]):
         """
         with session_scope() as session:
             res = (
-                session.query(ThermalEventTypeLineOfSight.line_of_sight)
-                .filter_by(thermal_event_type=thermal_event)
+                session.query(ThermalEventCategoryLineOfSight.line_of_sight)
+                .filter_by(thermal_event_category=category)
                 .all()
             )
             return [x[0] for x in res]
@@ -135,8 +153,56 @@ class CRUDLineOfSight(CRUDBase[LineOfSight]):
             return [x[0] for x in res]
 
 
+class CRUDMethod(CRUDBase[Method]):
+    """CRUD operations for Method objects."""
+
+    def list(self):
+        """List all method names.
+
+        Returns:
+            List[str]: The list of method names.
+
+        """
+        with session_scope() as session:
+            res = session.query(Method.name).all()
+            return [x[0] for x in res]
+
+
+class CRUDDevice(CRUDBase[Device]):
+    """CRUD operations for Device objects."""
+
+    def list(self):
+        """List all device names.
+
+        Returns:
+            List[str]: The list of device names.
+
+        """
+        with session_scope() as session:
+            res = session.query(Device.name).all()
+            return [x[0] for x in res]
+
+
+class CRUDSeverity(CRUDBase[Severity]):
+    """CRUD operations for Severity objects."""
+
+    def list(self):
+        """List all severity types.
+
+        Returns:
+            List[str]: The list of everity types.
+
+        """
+        with session_scope() as session:
+            res = session.query(Severity.name).all()
+            return [x[0] for x in res]
+
+
 user = CRUDUser(User)
-thermal_event_type = CRUDThermalEventType(ThermalEventType)
+thermal_event_category = CRUDThermalEventCategory(Category)
 dataset = CRUDDataset(Dataset)
 analysis_status = CRUDAnalysisStatus(AnalysisStatus)
 line_of_sight = CRUDLineOfSight(LineOfSight)
+method = CRUDMethod(Method)
+device = CRUDDevice(Device)
+severity = CRUDSeverity(Severity)

@@ -2,7 +2,7 @@ from typing import Union, List
 
 from sqlalchemy import and_, not_, or_
 
-from thermal_events import ThermalEvent
+from thermal_events import ThermalEvent, ParentChildRelationship
 from thermal_events.crud.base import CRUDBase, session_scope
 
 
@@ -42,8 +42,8 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
             else:
                 query = session.query(ThermalEvent)
 
-            if "pulse" in kwargs:
-                kwargs["pulse"] = float(kwargs["pulse"])
+            if "experiment_id" in kwargs:
+                kwargs["experiment_id"] = int(kwargs["experiment_id"])
 
             if "dataset" in kwargs:
                 dataset = kwargs.pop("dataset")
@@ -65,9 +65,9 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
                     ThermalEvent.line_of_sight.like(f"%{line_of_sight}%")
                 )
 
-            if "thermal_event" in kwargs:
-                event = kwargs.pop("thermal_event")
-                query = query.filter(ThermalEvent.thermal_event.like(f"%{event}%"))
+            if "category" in kwargs:
+                event = kwargs.pop("category")
+                query = query.filter(ThermalEvent.category.like(f"%{event}%"))
 
             query = query.filter_by(**kwargs)
 
@@ -86,12 +86,14 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
             return query.all()
 
     def get_by_columns_exclude_time_intervals(self, time_intervals: list, **kwargs):
-        """Retrieve ThermalEvent objects excluding specified time intervals.
+        """Retrieve ThermalEvent objects excluding the ones that begin and end
+        in specified time intervals. If a thermal event has only parts of its
+        timestamps in an interval, it is not excluded.
 
         Args:
             time_intervals (list):
-                List of time intervals to exclude. Each interval should be given
-                as a list with two elements [start_time, end_time].
+                List of time intervals to exclude, in nanosecond. Each interval
+                should be given as a list with two elements [start_time, end_time].
             **kwargs:
                 Additional filter conditions for the query.
 
@@ -120,9 +122,9 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
 
                 conds = []
                 if inf is not None:
-                    conds.append(ThermalEvent.initial_timestamp > inf)
+                    conds.append(ThermalEvent.initial_timestamp_ns >= inf)
                 if sup is not None:
-                    conds.append(ThermalEvent.final_timestamp < sup)
+                    conds.append(ThermalEvent.final_timestamp_ns <= sup)
 
                 if len(conds) == 1:
                     conds = conds[0]
@@ -140,22 +142,22 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
                 return out
             return query.all()
 
-    def get_by_pulse(self, pulse_inf: float, pulse_sup: float = None, **kwargs):
-        """Retrieve ThermalEvent objects based on pulse values.
+    def get_by_experiment_id(self, id_inf: int, id_sup: int = None, **kwargs):
+        """Retrieve ThermalEvent objects based on experiment ids.
 
         Args:
-            pulse_inf (float):
-                Lower bound of the pulse values. If pulse_sup is None, requires
-                the exact pulse value.
-            pulse_sup (float, optional):
-                Upper bound of the pulse values. Defaults to None.
+            id_inf (int):
+                Lower bound of the experiment ids. If id_sup is None, requires
+                the exact experiment id.
+            id_sup (int, optional):
+                Upper bound of the experiment ids. Defaults to None.
             **kwargs:
                 Additional filter conditions for the query.
 
         Returns:
             Union[list, tuple]:
                 Resulting ThermalEvent objects or columns based on the specified
-                pulse values.
+                experiment ids.
 
         """
         query = self.get_by_columns(return_query=True, **kwargs)
@@ -163,23 +165,35 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
         with session_scope() as session:
             query = query.with_session(session)
 
-            if pulse_sup is None:
-                query = query.filter_by(pulse=float(pulse_inf))
+            if id_sup is None:
+                query = query.filter_by(experiment_id=int(id_inf))
             else:
                 query = query.filter(
-                    ThermalEvent.pulse.between(float(pulse_inf), float(pulse_sup))
+                    ThermalEvent.experiment_id.between(int(id_inf), int(id_sup))
                 )
 
-            if "return_columns" in kwargs and kwargs["return_columns"] != []:
-                return [list(x) for x in zip(*query.all())]
+            if "return_columns" in kwargs and isinstance(
+                kwargs["return_columns"], list
+            ):
+                out = tuple(list(x) for x in zip(*query.all()))
+
+                # Case then the result of the query is empty
+                if len(out) == 0:
+                    out = tuple([] for _ in range(len(kwargs["return_columns"])))
+
+                if len(out) == 1:
+                    out = out[0]
+                return out
             return query.all()
 
-    def get_by_pulse_line_of_sight(self, pulse: float, line_of_sight: str, **kwargs):
-        """Retrieve ThermalEvent objects based on pulse value and line of sight.
+    def get_by_experiment_id_line_of_sight(
+        self, experiment_id: int, line_of_sight: str, **kwargs
+    ):
+        """Retrieve ThermalEvent objects based on experiment id and line of sight.
 
         Args:
-            pulse (float):
-                Pulse value to match.
+            experiment_id (int):
+                Experiment id to match.
             line_of_sight (str):
                 Line of sight value to match.
             **kwargs:
@@ -188,11 +202,11 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
         Returns:
             Union[list, tuple]:
                 Resulting ThermalEvent objects or columns based on the specified
-                pulse value and line of sight.
+                experiment id and line of sight.
 
         """
         return self.get_by_columns(
-            pulse=float(pulse), line_of_sight=line_of_sight, **kwargs
+            experiment_id=int(experiment_id), line_of_sight=line_of_sight, **kwargs
         )
 
     def get_by_device(self, device: str, **kwargs):
@@ -210,31 +224,89 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
                 device.
 
         """
-        return self.get_by_columns(dataset=device, **kwargs)
+        return self.get_by_columns(device=device, **kwargs)
 
     def get_by_dataset(self, dataset: int, **kwargs):
-        """Retrieve ThermalEvent objects based on dataset ID.
+        """Retrieve ThermalEvent objects based on dataset id.
 
         Args:
             dataset (int):
-                Dataset ID to match.
+                Dataset id to match.
             **kwargs:
                 Additional filter conditions for the query.
 
         Returns:
             Union[list, tuple]:
                 Resulting ThermalEvent objects or columns based on the specified
-                dataset ID.
+                dataset id.
 
         """
         return self.get_by_columns(dataset=dataset, **kwargs)
+
+    def get_parents_of_thermal_event(self, id: int, **kwargs):
+        """Retrieve the parents of a thermal event, based on its id.
+
+        Args:
+            id (int):
+                The id of the child thermal event.
+            **kwargs:
+                Additional filter conditions for the query.
+
+        Returns:
+            Union[list, tuple]:
+                Resulting ThermalEvent parents or columns based on the specified
+                child's id.
+
+        """
+        with session_scope() as session:
+            ids = (
+                session.query(ParentChildRelationship.parent).filter_by(child=id).all()
+            )
+
+            out = []
+            for id in ids:
+                out_id = self.get_by_columns(id=id[0], **kwargs)
+                if len(out_id) == 1:
+                    out_id = out_id[0]
+                out.append(out_id)
+
+            return out
+
+    def get_children_of_thermal_event(self, id: int, **kwargs):
+        """Retrieve the children of a thermal event, based on its id.
+
+        Args:
+            id (int):
+                The id of the parent thermal event.
+            **kwargs:
+                Additional filter conditions for the query.
+
+        Returns:
+            Union[list, tuple]:
+                Resulting ThermalEvent parents or columns based on the specified
+                parent's id.
+
+        """
+        with session_scope() as session:
+            ids = (
+                session.query(ParentChildRelationship.child).filter_by(parent=id).all()
+            )
+
+            out = []
+            for id in ids:
+                out_id = self.get_by_columns(id=id[0], **kwargs)
+                if len(out_id) == 1:
+                    out_id = out_id[0]
+                out.append(out_id)
+
+            return out
 
     def change_analysis_status(self, event_id: int, new_status: str):
         """Change the analysis status of a ThermalEvent.
 
         Args:
             event_id (int):
-                ID of the ThermalEvent to update.
+                id of the ThermalEvent to update.
             new_status (str):
                 New analysis status value.
 
@@ -258,7 +330,7 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
 
         with session_scope() as session:
             for obj in obj_in:
-                if len(obj.hot_spots) == 0:
+                if len(obj.instances) == 0:
                     session.delete(obj)
                 else:
                     session.merge(obj)
@@ -269,7 +341,7 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
 
         Args:
             events (Union[list, ThermalEvent, int]):
-                List of ThermalEvent objects, single ThermalEvent object, or ID(s) of
+                List of ThermalEvent objects, single ThermalEvent object, or id(s) of
                 ThermalEvent(s) to delete.
 
         """

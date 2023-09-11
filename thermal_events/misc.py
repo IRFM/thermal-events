@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 
 from .base import Base
+from .thermal_event_instance import BigIntegerType
 
 
 class Device(Base):
@@ -33,35 +34,35 @@ class LineOfSight(Base):
     description = Column(String(255), comment="Description of the line of sight")
 
 
-class ThermalEventType(Base):
-    """Model class representing a type of thermal event entity."""
+class Category(Base):
+    """Model class representing a category of thermal event entity."""
 
-    __tablename__ = "thermal_event_types"
+    __tablename__ = "thermal_event_categories"
 
     name = Column(
         String(255),
         primary_key=True,
         index=True,
         unique=True,
-        comment="Name of the type of thermal event",
+        comment="Name of the category of thermal event",
     )
     description = Column(
-        String(255), comment="Description of the type of thermal event"
+        String(255), comment="Description of the category of thermal event"
     )
 
 
-class ThermalEventTypeLineOfSight(Base):
-    """Model class representing the relationship between thermal event types and
+class ThermalEventCategoryLineOfSight(Base):
+    """Model class representing the relationship between thermal event categories and
     lines of sight."""
 
-    __tablename__ = "thermal_event_type_lines_of_sight"
+    __tablename__ = "thermal_event_category_lines_of_sight"
 
-    thermal_event_type = Column(
+    thermal_event_category = Column(
         String(255),
-        ForeignKey("thermal_event_types.name"),
+        ForeignKey("thermal_event_categories.name"),
         primary_key=True,
         index=True,
-        comment="Name of the type of thermal event",
+        comment="Name of the category of thermal event",
     )
     line_of_sight = Column(
         String(255),
@@ -69,6 +70,38 @@ class ThermalEventTypeLineOfSight(Base):
         primary_key=True,
         index=True,
         comment="Name of the line of sight",
+    )
+
+
+class Severity(Base):
+    """Model class representing the severity of a thermal event."""
+
+    __tablename__ = "severity_types"
+
+    name = Column(
+        String(255),
+        primary_key=True,
+        index=True,
+        unique=True,
+        comment="Name of the severity type",
+    )
+    description = Column(String(255), comment="Description of the severity type")
+
+
+class Method(Base):
+    """Model class representing a detection or annotation method."""
+
+    __tablename__ = "methods"
+
+    name = Column(
+        String(255),
+        primary_key=True,
+        index=True,
+        unique=True,
+        comment="Name of the method",
+    )
+    description = Column(
+        String(255), comment="Description of the detection or annotation method"
     )
 
 
@@ -84,6 +117,7 @@ class User(Base):
         unique=True,
         comment="Name of the user",
     )
+    email = Column(String(64), comment="The email address of the user")
 
 
 class Dataset(Base):
@@ -116,3 +150,34 @@ class AnalysisStatus(Base):
         comment="Name of the analysis status",
     )
     description = Column(String(255), comment="Description of the analysis status")
+
+
+class ParentChildRelationship(Base):
+    """Model class representing the relationship between a parent thermal event and
+    a child thermal event."""
+
+    __tablename__ = "thermal_events_genealogy"
+
+    parent = Column(
+        BigIntegerType,
+        ForeignKey("thermal_events.id"),
+        primary_key=True,
+        index=True,
+        comment="Parent thermal event id",
+    )
+
+    child = Column(
+        BigIntegerType,
+        ForeignKey("thermal_events.id"),
+        primary_key=True,
+        index=True,
+        comment="Child thermal event id",
+    )
+
+    timestamp_ns = Column(
+        BigIntegerType,
+        primary_key=True,
+        index=True,
+        comment="Timestamp after which the splitting or merging happened, "
+        + "in nanosecond",
+    )
