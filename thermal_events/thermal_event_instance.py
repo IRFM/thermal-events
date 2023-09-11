@@ -93,7 +93,7 @@ class ThermalEventInstance(Base):
     id = Column(
         BigIntegerType, primary_key=True, autoincrement=True, index=True, unique=True
     )
-    thermal_evend_id = Column(
+    thermal_event_id = Column(
         BigIntegerType,
         ForeignKey("thermal_events.id", onupdate="CASCADE", ondelete="CASCADE"),
         index=True,
