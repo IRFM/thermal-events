@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "thermal-events"
-version = "0.2.0"
+version = "1.0.0"
 description = "Python library that handles the thermal events and the interaction with the thermal events database of fusion reactors"
 authors = ["Leo Dubus <leo.dubus@cea.fr>", "Erwan Grelier <erwan.grelier@cea.fr>", "Victor Moncada <victor.moncada@cea.fr>"]
 readme = "README.md"
