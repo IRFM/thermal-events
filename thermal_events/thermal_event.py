@@ -222,7 +222,7 @@ class ThermalEvent(Base):
                 if "timestamp" in key or key == "duration":
                     value = int(value)
 
-                if key == "instances":
+                if key == "thermal_events_instances":
                     instances = [ThermalEventInstance(**x) for x in value]
                     self.instances = instances
                 else:
