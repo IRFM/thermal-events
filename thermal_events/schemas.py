@@ -21,7 +21,9 @@ class ThermalEventInstanceSchema(SQLAlchemyAutoSchema):
 class ThermalEventSchema(SQLAlchemyAutoSchema):
     """Schema for the ThermalEvent model."""
 
-    instances = RelatedList(Nested(ThermalEventInstanceSchema))
+    instances = RelatedList(
+        Nested(ThermalEventInstanceSchema), data_key="thermal_events_instances"
+    )
 
     class Meta:
         model = ThermalEvent
