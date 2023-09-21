@@ -341,7 +341,8 @@ class ThermalEvent(Base):
         Write a list of ThermalEvent objects to a JSON file.
 
         Args:
-            path_to_file (str): Path to the output JSON file.
+            path_to_file (str): Path to the output JSON file. If equal to "str",
+                return instead the string that would have been written to the file.
             thermal_events (list): List of ThermalEvent objects to be written.
 
         Returns:
@@ -357,6 +358,9 @@ class ThermalEvent(Base):
             make_transient(event)
             [make_transient(x) for x in event.instances]
             out[ind] = ThermalEventSchema().dump(event)
+
+        if path_to_file == "str":
+            return json.dumps(out)
 
         with open(path_to_file, "w", encoding="utf-8") as file:
             json.dump(out, file, ensure_ascii=False, separators=(",", ":"))
