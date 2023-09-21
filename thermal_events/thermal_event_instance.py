@@ -405,6 +405,10 @@ class ThermalEventInstance(Base):
 
         instance.timestamp_ns = int(timestamp_ns)
 
+        # Clean the rectangle
+        rect[0] = max((rect[0], 0))
+        rect[1] = max((rect[1], 0))
+
         instance.bbox_x = int(rect[0])
         instance.bbox_y = int(rect[1])
         instance.bbox_width = int(rect[2])
