@@ -336,7 +336,9 @@ class ThermalEvent(Base):
         return [x.timestamp_ns for x in self.instances]
 
     @staticmethod
-    def write_events_to_json(path_to_file: str, thermal_events: list):
+    def write_events_to_json(
+        path_to_file: str, thermal_events: list, use_id_as_key=False
+    ):
         """
         Write a list of ThermalEvent objects to a JSON file.
 
@@ -344,6 +346,8 @@ class ThermalEvent(Base):
             path_to_file (str): Path to the output JSON file. If equal to "str",
                 return instead the string that would have been written to the file.
             thermal_events (list): List of ThermalEvent objects to be written.
+            use_id_as_key (bool): Indicates whether to use a simple counter or
+                the id of each event as keys for the dictionnary. Defaults to False.
 
         Returns:
             None
@@ -355,6 +359,9 @@ class ThermalEvent(Base):
 
         out = {}
         for ind, event in enumerate(thermal_events):
+            if use_id_as_key:
+                ind = event.id
+
             make_transient(event)
             [make_transient(x) for x in event.instances]
             out[ind] = ThermalEventSchema().dump(event)
