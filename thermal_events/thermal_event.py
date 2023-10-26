@@ -83,7 +83,7 @@ class ThermalEvent(Base):
     confidence = Column(
         DoubleType,
         nullable=False,
-        default=1,
+        default=0,
         comment="Confidence in the detection or annotation, between 0 and 1, "
         + "higher is better",
     )
