@@ -1,12 +1,14 @@
 import json
+from copy import deepcopy
+from os.path import isfile
 from typing import Union
 
 from sqlalchemy import (
     Boolean,
     Column,
-    Integer,
     ForeignKey,
     ForeignKeyConstraint,
+    Integer,
     String,
 )
 from sqlalchemy.dialects import sqlite
@@ -219,7 +221,7 @@ class ThermalEvent(Base):
         if kwargs:
             for key, value in kwargs.items():
                 # If the key is a time, make sure the value is an int
-                if "timestamp" in key or key == "duration":
+                if value is not None and ("timestamp" in key or key == "duration"):
                     value = int(value)
 
                 if key == "thermal_events_instances":
@@ -231,18 +233,24 @@ class ThermalEvent(Base):
                 self.compute()
 
     @classmethod
-    def from_json(cls, path_to_file):
+    def from_json(cls, string_or_path_to_file):
         """
         Create a ThermalEvent object from a JSON file.
 
         Args:
-            path_to_file (str): Path to the JSON file.
+            string_or_path_to_file (str): JSON string or path to the JSON file.
 
         Returns:
             ThermalEvent or list[ThermalEvent]: The created ThermalEvent object(s).
         """
-        with open(path_to_file, "r", encoding="utf-8") as file:
-            data = json.load(file)
+
+        is_path = isfile(string_or_path_to_file)
+
+        if is_path:
+            with open(string_or_path_to_file, "r", encoding="utf-8") as file:
+                data = json.load(file)
+        else:
+            data = json.loads(string_or_path_to_file)
 
         out = []
         for key in data:
@@ -312,6 +320,14 @@ class ThermalEvent(Base):
         self.duration_ns = self.final_timestamp_ns - self.initial_timestamp_ns
 
         self._computed = True
+
+    def to_dict(self):
+        from .schemas import ThermalEventSchema
+
+        out = deepcopy(self)
+        make_transient(out)
+        [make_transient(x) for x in out.instances]
+        return {"0": ThermalEventSchema().dump(out)}
 
     def to_json(self, path_to_file):
         """
