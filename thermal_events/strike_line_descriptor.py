@@ -88,6 +88,14 @@ class StrikeLineDescriptor(Base):
                 else:
                     setattr(self, key, value)
 
+    def return_segmented_points(self) -> list:
+        """Returns the segmented points as a list.
+
+        Returns:
+            list: The segmented points as a list.
+        """
+        return self.segmented_points_as_list
+
     @property
     def segmented_points_as_list(self) -> list:
         """Return the segmented points as a list.
