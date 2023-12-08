@@ -47,9 +47,11 @@ class StrikeLineDescriptor(Base):
     curve = Column(
         DoubleType,
         nullable=False,
-        comment="The curvature of the strike line (categorical)",
+        comment="The curvature of the strike line",
     )
-    comments = Column(String(255), comment="Comments describing the thermal event")
+    comments = Column(
+        String(255), comment="Comments describing the strike line descriptor"
+    )
     flag_RT = Column(
         Boolean,
         comment="A boolean flag indicating if the object has been computed in real time or not",
@@ -72,6 +74,20 @@ class StrikeLineDescriptor(Base):
         flag_RT: bool = False,
         **kwargs
     ) -> None:
+        """Initialize a StrikeLineDescriptor.
+
+        Args:
+            instance (ThermalEventInstance): The ThermalEventInstance described by
+                the object.
+            segmented_points (list): The list of segmented points.
+            angle (float): The angle of the strike line, in degrees.
+            curve (float): The curvature of the strike line.
+            comments (str, optional): Comments describing the descriptor. Defaults
+                to str().
+            flag_RT (bool, optional): A boolean flag indicating if the object has
+                been computed in real time or not. Defaults to False.
+            **kwargs: Additional keyword arguments for the ThermalEventInstance.
+        """
         self.instance = instance
         if not isinstance(segmented_points, str):
             segmented_points = polygon_to_string(segmented_points)
@@ -92,7 +108,7 @@ class StrikeLineDescriptor(Base):
                     setattr(self, key, value)
 
     def return_segmented_points(self) -> list:
-        """Returns the segmented points as a list.
+        """Return the segmented points as a list.
 
         Returns:
             list: The segmented points as a list.
