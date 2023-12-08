@@ -2,6 +2,7 @@ from .settings import settings
 from .base import Base
 from .thermal_event_instance import ThermalEventInstance
 from .thermal_event import ThermalEvent
+from .strike_line_descriptor import StrikeLineDescriptor
 from .misc import (
     Device,
     LineOfSight,
@@ -20,6 +21,7 @@ __all__ = [
     "Base",
     "ThermalEventInstance",
     "ThermalEvent",
+    "StrikeLineDescriptor",
     "Device",
     "LineOfSight",
     "Category",
