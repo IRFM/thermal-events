@@ -255,6 +255,10 @@ class ThermalEventInstance(Base):
         "ThermalEvent", back_populates="instances", uselist=False
     )
 
+    strike_line_descriptor = relationship(
+        "StrikeLineDescriptor", back_populates="instance", cascade="all, delete-orphan"
+    )
+
     _buffer = None  # image bugger used to draw polygons
     _mutex = Lock()
 
