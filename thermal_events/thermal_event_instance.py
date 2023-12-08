@@ -474,7 +474,7 @@ class ThermalEventInstance(Base):
         self.min_T_image_position_y = int(y_0 + coords[0][posmin])
 
     def return_polygon(self) -> list:
-        """Returns the instance closed polygon as a list.
+        """Return the instance closed polygon as a list.
 
         Returns:
             list: The instance closed polygon as a list.
