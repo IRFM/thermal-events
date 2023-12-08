@@ -1,43 +1,53 @@
-import pytest
-from thermal_events import StrikeLineDescriptor, ThermalEventInstance
+import random
+
+from tests.test_thermal_event import random_instance
+from thermal_events import StrikeLineDescriptor
 
 
-@pytest.fixture
-def rectangle():
-    return [100, 200, 25, 50]
+def random_strike_line_descriptor(return_parameters=False):
+    instance = random_instance()
 
+    segmented_points = [
+        [random.randint(1, 100), random.randint(1, 100)]
+        for _ in range(random.randint(5, 10))
+    ]
+    angle = random.randrange(90)
+    curve = random.randrange(5)
+    flag_RT = random.choice([True, False])
 
-@pytest.fixture
-def segmented_points():
-    return [[0, 0], [2, 0], [4, 2], [1, 3], [0, 1]]
-
-
-def test_strike_line_descriptor(rectangle, segmented_points):
-    thermal_event_instance = ThermalEventInstance.from_rectangle(
-        rectangle, timestamp_ns=100
-    )
     strike_line_descriptor = StrikeLineDescriptor(
-        thermal_event_instance, segmented_points, 45, 2, flag_RT=True
+        instance, segmented_points, angle, curve, flag_RT=flag_RT
     )
+    if return_parameters:
+        return strike_line_descriptor, instance, segmented_points, angle, curve, flag_RT
+    return strike_line_descriptor
 
-    assert strike_line_descriptor.instance.bbox_x == rectangle[0]
-    assert strike_line_descriptor.instance.bbox_y == rectangle[1]
-    assert strike_line_descriptor.instance.bbox_width == rectangle[2]
-    assert strike_line_descriptor.instance.bbox_height == rectangle[3]
-    assert strike_line_descriptor.instance.timestamp_ns == 100
+
+def test_strike_line_descriptor():
+    (
+        strike_line_descriptor,
+        instance,
+        segmented_points,
+        angle,
+        curve,
+        flag_RT,
+    ) = random_strike_line_descriptor(True)
+
+    assert strike_line_descriptor.instance.bbox_x == instance.bbox_x
+    assert strike_line_descriptor.instance.bbox_y == instance.bbox_y
+    assert strike_line_descriptor.instance.bbox_width == instance.bbox_width
+    assert strike_line_descriptor.instance.bbox_height == instance.bbox_height
+    assert strike_line_descriptor.instance.timestamp_ns == instance.timestamp_ns
 
     assert strike_line_descriptor.segmented_points_as_list == segmented_points
-    assert strike_line_descriptor.angle == 45
-    assert strike_line_descriptor.curve == 2
-    assert strike_line_descriptor.flag_RT
+    assert strike_line_descriptor.angle == angle
+    assert strike_line_descriptor.curve == curve
+    assert strike_line_descriptor.flag_RT == flag_RT
 
 
-def test_segmented_points_as_list(rectangle, segmented_points):
-    thermal_event_instance = ThermalEventInstance.from_rectangle(
-        rectangle, timestamp_ns=100
-    )
-    strike_line_descriptor = StrikeLineDescriptor(
-        thermal_event_instance, segmented_points, 45, 2, flag_RT=True
+def test_segmented_points_as_list():
+    (strike_line_descriptor, _, segmented_points, *_) = random_strike_line_descriptor(
+        True
     )
 
     assert strike_line_descriptor.return_segmented_points() == segmented_points

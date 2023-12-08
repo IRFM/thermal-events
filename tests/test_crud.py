@@ -17,6 +17,7 @@ from thermal_events import (
     ParentChildRelationship,
     Severity,
     ThermalEvent,
+    StrikeLineDescriptor,
     ThermalEventCategoryLineOfSight,
     User,
     crud,
@@ -34,6 +35,7 @@ from .test_thermal_event import (
 )
 
 from .test_thermal_event import random_event as _random_event
+from .test_strike_line_descriptor import random_strike_line_descriptor
 
 # Number of different datasets
 NB_DATASETS = 3
@@ -154,6 +156,7 @@ def reset_temporary_database():
 
         session.query(ParentChildRelationship).delete()
         session.query(ThermalEvent).delete()
+        session.query(StrikeLineDescriptor).delete()
         session.commit()
 
 
@@ -204,7 +207,7 @@ def test_thermal_event_update():
     thermal_event.method = expected
     crud.thermal_event.update(thermal_event)
 
-    # Retriveve the event and check if its method has been updated
+    # Retrieve the event and check if its method has been updated
     thermal_event_db = crud.thermal_event.get(thermal_event.id)
 
     assert thermal_event_db.method == expected
@@ -454,6 +457,125 @@ def test_thermal_event_change_analysis_status():
     )[0]
 
     assert actual == expected
+
+
+def test_strike_line_descriptor_create_read():
+    # Generate a random strike line descriptor
+    expected = random_strike_line_descriptor()
+
+    # Send the descriptor to the database
+    crud.strike_line_descriptor.create(expected)
+
+    # Read the descriptor from the database
+    actual = crud.strike_line_descriptor.get(expected.id)
+
+    assert actual.instance.bbox_x == expected.instance.bbox_x
+    assert actual.instance.bbox_y == expected.instance.bbox_y
+    assert actual.instance.bbox_width == expected.instance.bbox_width
+    assert actual.instance.bbox_height == expected.instance.bbox_height
+    assert actual.instance.timestamp_ns == expected.instance.timestamp_ns
+
+    assert actual.segmented_points_as_list == expected.segmented_points_as_list
+    assert actual.angle == expected.angle
+    assert actual.curve == expected.curve
+    assert actual.flag_RT == expected.flag_RT
+
+
+def test_strike_line_descriptor_get_multi():
+    # Generate random descriptors
+    nb = 5
+    descriptors = [random_strike_line_descriptor() for _ in range(nb)]
+
+    # Send the descriprots to the database
+    crud.strike_line_descriptor.create(descriptors)
+
+    # Store their ids
+    expected = [x.id for x in descriptors]
+
+    # Retrieve the descriptors and their ids
+    descriptors_read = crud.strike_line_descriptor.get_multi(limit=nb)
+    actual = [x.id for x in descriptors_read]
+
+    assert actual == expected
+
+
+def test_strike_line_descriptor_update():
+    # Generate a random descriptor
+    descriptor = random_strike_line_descriptor()
+
+    # Send the descriptor to the database
+    crud.strike_line_descriptor.create(descriptor)
+
+    # Update its angle with a different, randomly chosen one
+    expected = random.randrange(90)
+    descriptor.angle = expected
+    crud.strike_line_descriptor.update(descriptor)
+
+    # Retrieve the descriptor and check if its angle has been updated
+    descriptor_db = crud.strike_line_descriptor.get(descriptor.id)
+
+    assert descriptor_db.angle == expected
+
+
+def test_strike_line_descriptor_delete():
+    # Generate a random descriptor
+    descriptor = random_strike_line_descriptor()
+
+    # Send the descriptor to the database
+    crud.strike_line_descriptor.create(descriptor)
+
+    # Delete the descriptor and check it is deleted in the database
+    crud.strike_line_descriptor.delete(descriptor)
+
+    assert crud.strike_line_descriptor.get(descriptor.id) is None
+
+
+def test_strike_line_descriptor_get_by_columns():
+    # Generate a random descriptor
+    (
+        descriptor,
+        instance,
+        segmented_points,
+        angle,
+        curve,
+        flag_RT,
+    ) = random_strike_line_descriptor(return_parameters=True)
+
+    # Send the descriptor to the database
+    crud.strike_line_descriptor.create(descriptor)
+
+    # Query with the angle
+    actual = crud.strike_line_descriptor.get_by_columns(angle=angle)
+    assert len(actual) == 1
+
+    # Query with the curve
+    actual = crud.strike_line_descriptor.get_by_columns(curve=curve + 1)
+    assert len(actual) == 0
+    actual = crud.strike_line_descriptor.get_by_columns(
+        curve=curve, return_columns=["id"]
+    )
+    assert len(actual) == 1
+
+    # Query with both angle and curve
+    actual = crud.strike_line_descriptor.get_by_columns(angle=angle, curve=curve)
+    assert len(actual) == 1
+
+
+def test_strike_line_descriptor_get_by_flag_RT():
+    # Generate a random descriptor
+    descriptor = random_strike_line_descriptor()
+    descriptor.flag_RT = True
+
+    # Send the descriptor to the database
+    crud.strike_line_descriptor.create(descriptor)
+
+    # Query the descriptors with flag_RT == True
+    actual = crud.strike_line_descriptor.get_by_flag_RT(True)
+    assert len(actual) == 1
+
+    # Query the descriptors with flag_RT == False
+    actual = crud.strike_line_descriptor.get_by_flag_RT(False)
+    assert len(actual) == 0
 
 
 def test_user():
