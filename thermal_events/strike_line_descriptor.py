@@ -29,7 +29,9 @@ class StrikeLineDescriptor(Base):
 
     thermal_event_instance_id = Column(
         BigIntegerType,
-        ForeignKey("thermal_events_instances.id"),
+        ForeignKey(
+            "thermal_events_instances.id", onupdate="CASCADE", ondelete="CASCADE"
+        ),
         index=True,
         comment="The id of the thermal event instance described by the descriptor",
     )
@@ -56,6 +58,7 @@ class StrikeLineDescriptor(Base):
     instance = relationship(
         "ThermalEventInstance",
         lazy="subquery",
+        passive_deletes=True,
         back_populates="strike_line_descriptor",
     )
 

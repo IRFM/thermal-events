@@ -256,7 +256,9 @@ class ThermalEventInstance(Base):
     )
 
     strike_line_descriptor = relationship(
-        "StrikeLineDescriptor", back_populates="instance", cascade="all, delete-orphan"
+        "StrikeLineDescriptor",
+        back_populates="instance",
+        cascade="all, delete, delete-orphan",
     )
 
     _buffer = None  # image bugger used to draw polygons
