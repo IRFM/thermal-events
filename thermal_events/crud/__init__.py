@@ -1,4 +1,5 @@
 from .thermal_event import thermal_event
+from .thermal_event_instance import thermal_event_instance
 from .strike_line_descriptor import strike_line_descriptor
 from .misc import (
     user,
@@ -13,6 +14,7 @@ from .misc import (
 
 __all__ = [
     "thermal_event",
+    "thermal_event_instance",
     "strike_line_descriptor",
     "user",
     "thermal_event_category",
