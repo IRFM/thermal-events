@@ -321,13 +321,17 @@ class ThermalEvent(Base):
 
         self._computed = True
 
-    def to_dict(self):
+    def to_dict(self, use_id_as_key=False):
         from .schemas import ThermalEventSchema
 
         out = deepcopy(self)
         make_transient(out)
         [make_transient(x) for x in out.instances]
-        return {"0": ThermalEventSchema().dump(out)}
+        if use_id_as_key:
+            key = str(self.id)
+        else:
+            key = "0"
+        return {key: ThermalEventSchema().dump(out)}
 
     def to_json(self, path_to_file):
         """
