@@ -259,6 +259,7 @@ class ThermalEventInstance(Base):
         "StrikeLineDescriptor",
         back_populates="instance",
         cascade="all, delete, delete-orphan",
+        uselist=False,
     )
 
     _buffer = None  # image bugger used to draw polygons

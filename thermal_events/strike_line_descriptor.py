@@ -1,3 +1,4 @@
+from copy import deepcopy
 from sqlalchemy import (
     Boolean,
     Column,
@@ -6,7 +7,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.dialects.mysql import DOUBLE
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import make_transient, relationship
 
 from .base import Base
 from .thermal_event_instance import (
@@ -106,6 +107,14 @@ class StrikeLineDescriptor(Base):
                     self.segmented_points = polygon_to_string(value)
                 else:
                     setattr(self, key, value)
+
+    def to_dict(self):
+        from .schemas import StrikeLineDescriptorSchema
+
+        out = deepcopy(self)
+        make_transient(out)
+        make_transient(out.instance)
+        return {"0": StrikeLineDescriptorSchema().dump(out)}
 
     def return_segmented_points(self) -> list:
         """Return the segmented points as a list.

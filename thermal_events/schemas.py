@@ -3,6 +3,7 @@ from marshmallow_sqlalchemy.fields import Nested, RelatedList
 from marshmallow import fields
 from .thermal_event_instance import ThermalEventInstance
 from .thermal_event import ThermalEvent
+from .strike_line_descriptor import StrikeLineDescriptor
 
 
 class ThermalEventInstanceSchema(SQLAlchemyAutoSchema):
@@ -27,6 +28,17 @@ class ThermalEventSchema(SQLAlchemyAutoSchema):
 
     class Meta:
         model = ThermalEvent
+        include_relationships = True
+        include_fk = True
+        load_instance = True
+        transient = True
+
+
+class StrikeLineDescriptorSchema(SQLAlchemyAutoSchema):
+    """Schema for the StrikeLineDescriptor model."""
+
+    class Meta:
+        model = StrikeLineDescriptor
         include_relationships = True
         include_fk = True
         load_instance = True
