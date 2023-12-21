@@ -1,5 +1,4 @@
 import json
-from copy import deepcopy
 from os.path import isfile
 from typing import Union
 
@@ -321,12 +320,21 @@ class ThermalEvent(Base):
 
         self._computed = True
 
+    def _make_transient_copy(self):
+        d = dict(self.__dict__)
+        d.pop("id", None)
+        d.pop("_sa_instance_state")
+        d["instances"] = [x._make_transient_copy() for x in d["instances"]]
+        copy = self.__class__(**d)
+        make_transient(copy)
+        [make_transient(x) for x in copy.instances]
+
+        return copy
+
     def to_dict(self, use_id_as_key=False):
         from .schemas import ThermalEventSchema
 
-        out = deepcopy(self)
-        make_transient(out)
-        [make_transient(x) for x in out.instances]
+        out = self._make_transient_copy()
         if use_id_as_key:
             key = str(self.id)
         else:
