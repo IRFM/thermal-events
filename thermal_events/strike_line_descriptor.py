@@ -91,6 +91,11 @@ class StrikeLineDescriptor(Base):
         self.instance = instance
         if not isinstance(segmented_points, str):
             segmented_points = polygon_to_string(segmented_points)
+
+        if len(segmented_points) > 512:
+            segmented_points = segmented_points[:512]
+            comments += "; segmented points truncated due to excessive length"
+
         self.segmented_points = segmented_points
         self.angle = angle
         self.curve = curve
