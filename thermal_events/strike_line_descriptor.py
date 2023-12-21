@@ -37,7 +37,7 @@ class StrikeLineDescriptor(Base):
     )
 
     segmented_points = Column(
-        String(256),
+        String(512),
         nullable=False,
         comment="The segmented points in the cropped image of the strike line",
     )
