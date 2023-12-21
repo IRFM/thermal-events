@@ -1,4 +1,3 @@
-from copy import deepcopy
 from sqlalchemy import (
     Boolean,
     Column,
@@ -108,12 +107,21 @@ class StrikeLineDescriptor(Base):
                 else:
                     setattr(self, key, value)
 
+    def _make_transient_copy(self):
+        d = dict(self.__dict__)
+        d.pop("id", None)
+        d.pop("_sa_instance_state")
+        d["instance"] = d["instance"]._make_transient_copy()
+        copy = self.__class__(**d)
+        make_transient(copy)
+        make_transient(copy.instance)
+
+        return copy
+
     def to_dict(self):
         from .schemas import StrikeLineDescriptorSchema
 
-        out = deepcopy(self)
-        make_transient(out)
-        make_transient(out.instance)
+        out = self._make_transient_copy()
         return {"0": StrikeLineDescriptorSchema().dump(out)}
 
     def return_segmented_points(self) -> list:

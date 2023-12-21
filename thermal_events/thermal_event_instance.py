@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from sqlalchemy import BigInteger, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects import sqlite
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, make_transient
 
 from .base import Base
 from .polysimplify import VWSimplifier
@@ -473,6 +473,15 @@ class ThermalEventInstance(Base):
         posmin = np.argmin(ir_polygon)
         self.min_T_image_position_x = int(x_0 + coords[1][posmin])
         self.min_T_image_position_y = int(y_0 + coords[0][posmin])
+
+    def _make_transient_copy(self):
+        d = dict(self.__dict__)
+        d.pop("id", None)
+        d.pop("_sa_instance_state")
+        copy = self.__class__(**d)
+        make_transient(copy)
+
+        return copy
 
     def return_polygon(self) -> list:
         """Return the instance closed polygon as a list.
