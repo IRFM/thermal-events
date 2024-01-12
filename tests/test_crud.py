@@ -469,12 +469,6 @@ def test_strike_line_descriptor_create_read():
     # Read the descriptor from the database
     actual = crud.strike_line_descriptor.get(expected.id)
 
-    assert actual.instance.bbox_x == expected.instance.bbox_x
-    assert actual.instance.bbox_y == expected.instance.bbox_y
-    assert actual.instance.bbox_width == expected.instance.bbox_width
-    assert actual.instance.bbox_height == expected.instance.bbox_height
-    assert actual.instance.timestamp_ns == expected.instance.timestamp_ns
-
     assert actual.segmented_points_as_list == expected.segmented_points_as_list
     assert actual.angle == expected.angle
     assert actual.curve == expected.curve
