@@ -59,9 +59,9 @@ class StrikeLineDescriptor(Base):
 
     instance = relationship(
         "ThermalEventInstance",
-        lazy="subquery",
         passive_deletes=True,
         back_populates="strike_line_descriptor",
+        uselist=False,
     )
 
     def __init__(
