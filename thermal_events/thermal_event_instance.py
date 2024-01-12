@@ -258,6 +258,7 @@ class ThermalEventInstance(Base):
     strike_line_descriptor = relationship(
         "StrikeLineDescriptor",
         back_populates="instance",
+        lazy="subquery",
         cascade="all, delete, delete-orphan",
         uselist=False,
     )
