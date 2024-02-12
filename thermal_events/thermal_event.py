@@ -91,6 +91,7 @@ class ThermalEvent(Base):
 
     max_temperature_C = Column(
         Integer,
+        default=0,
         comment="Maximum apparent temperature in the thermal event, in degree celsius",
     )
     max_T_timestamp_ns = Column(
