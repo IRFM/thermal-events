@@ -142,6 +142,67 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
                 return out
             return query.all()
 
+    def get_by_columns_in_time_intervals(self, time_intervals: list, **kwargs):
+        """Retrieve ThermalEvent objects that happen in specified time intervals.
+
+        Args:
+            time_intervals (list):
+                List of time intervals to include, in nanosecond. Each interval
+                should be given as a list with two elements [start_time, end_time].
+            **kwargs:
+                Additional filter conditions for the query.
+
+        Returns:
+            list:
+                Resulting ThermalEvent objects in the specified time intervals.
+
+        Raises:
+            ValueError: If the time intervals are not given as a list of lists.
+
+        """
+        query = self.get_by_columns(return_query=True, **kwargs)
+        with session_scope() as session:
+            query = query.with_session(session)
+
+            if not isinstance(time_intervals[0], list):
+                time_intervals = [time_intervals]
+
+            assert all(isinstance(el, list) for el in time_intervals), ValueError(
+                "The time intervals must be given as a list of lists."
+            )
+
+            conds = []
+            for interval in time_intervals:
+                inf = interval[0]
+                sup = interval[1]
+
+                cond = []
+                if inf is not None:
+                    cond.append(ThermalEvent.initial_timestamp_ns >= inf)
+                if sup is not None:
+                    cond.append(ThermalEvent.final_timestamp_ns <= sup)
+
+                if len(cond) == 1:
+                    cond = cond[0]
+                else:
+                    cond = and_(*cond)
+                conds.append(cond)
+
+            if len(conds) == 1:
+                conds = conds[0]
+            else:
+                conds = or_(*conds)
+            query = query.filter(conds)
+
+            if "return_columns" in kwargs and isinstance(
+                kwargs["return_columns"], list
+            ):
+                out = tuple(list(x) for x in zip(*query.all()))
+                if len(out) == 1:
+                    out = out[0]
+                return out
+            return query.all()
+
     def get_by_experiment_id(self, id_inf: int, id_sup: int = None, **kwargs):
         """Retrieve ThermalEvent objects based on experiment ids.
 
