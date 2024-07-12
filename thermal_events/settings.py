@@ -8,10 +8,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings."""
 
-    MYSQL_HOST: Optional[str]
-    MYSQL_DATABASE: Optional[str]
-    MYSQL_USER: Optional[str]
-    MYSQL_PASSWORD: Optional[str]
+    MYSQL_HOST: Optional[str] = None
+    MYSQL_DATABASE: Optional[str] = None
+    MYSQL_USER: Optional[str] = None
+    MYSQL_PASSWORD: Optional[str] = None
 
     SQLITE: bool = False
     SQLITE_DATABASE_FILE: str = "database.db"
