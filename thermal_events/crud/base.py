@@ -59,20 +59,18 @@ class CRUDBase(Generic[ModelType]):
         with session_scope() as session:
             return session.query(self.model).filter(self.model.id == id).first()
 
-    def get_multi(self, *, skip: int = 0, limit: int = 100) -> List[ModelType]:
-        """Get multiple objects with optional pagination.
+    def get_multi(self, ids) -> List[ModelType]:
+        """Get multiple objects given their ids.
 
         Args:
-            skip (int, optional): The number of objects to skip. Defaults to 0.
-            limit (int, optional): The maximum number of objects to retrieve. Defaults
-            to 100.
+            ids (list): The list of ids of objects to query.
 
         Returns:
             List[ModelType]: The list of retrieved objects.
 
         """
         with session_scope() as session:
-            return session.query(self.model).offset(skip).limit(limit).all()
+            return session.query(self.model).filter(self.model.id.in_(ids)).all()
 
     def create(self, obj_in: Union[list, ModelType]) -> None:
         """Create a new object or a list of objects.

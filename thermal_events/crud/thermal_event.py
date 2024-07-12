@@ -378,6 +378,22 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
             )
             session.commit()
 
+    def change_severity(self, event_id: int, new_severity: str):
+        """Change the severity of a ThermalEvent.
+
+        Args:
+            event_id (int):
+                id of the ThermalEvent to update.
+            new_severity (str):
+                New severity value.
+
+        """
+        with session_scope() as session:
+            session.query(ThermalEvent).filter_by(id=event_id).update(
+                {"severity": new_severity}
+            )
+            session.commit()
+
     def update(self, obj_in: Union[ThermalEvent, List[ThermalEvent]]) -> None:
         """Update an existing object or a list of ThermalEvent objects.
 
