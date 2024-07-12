@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from pydantic import BaseSettings, validator
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -17,7 +18,7 @@ class Settings(BaseSettings):
 
     DATABASE_URI: Optional[str] = None
 
-    @validator("DATABASE_URI", pre=True, allow_reuse=True)
+    @field_validator("DATABASE_URI", mode="before")
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         """
         Assemble the database connection URI.
@@ -39,12 +40,12 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v
 
-        if values.get("SQLITE", True):
-            return f"sqlite:///{values.get('SQLITE_DATABASE_FILE')}"
+        if values.data.get("SQLITE", True):
+            return f"sqlite:///{values.data.get('SQLITE_DATABASE_FILE')}"
 
         return (
-            f"mysql+pymysql://{values.get('MYSQL_USER')}:{values.get('MYSQL_PASSWORD')}@{values.get('MYSQL_HOST')}"
-            f"/{values.get('MYSQL_DATABASE')}"
+            f"mysql+pymysql://{values.data.get('MYSQL_USER')}:{values.data.get('MYSQL_PASSWORD')}@{values.data.get('MYSQL_HOST')}"
+            f"/{values.data.get('MYSQL_DATABASE')}"
         )
 
     class Config:
@@ -52,6 +53,7 @@ class Settings(BaseSettings):
 
         case_sensitive = True
         env_file = str(Path.home() / ".env.default"), ".env"
+        extra = "ignore"
 
 
 settings = Settings()

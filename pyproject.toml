@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "thermal-events"
-version = "1.1.0"
+version = "1.1.1"
 description = "Python library that handles the thermal events and the interaction with the thermal events database of fusion reactors"
 authors = ["Leo Dubus <leo.dubus@cea.fr>", "Erwan Grelier <erwan.grelier@cea.fr>", "Victor Moncada <victor.moncada@cea.fr>"]
 readme = "README.md"
@@ -12,7 +12,8 @@ sqlalchemy = "^1.4.44"
 numpy = "^1.23.4"
 opencv-python = "^4.6.0.66"
 marshmallow-sqlalchemy = "^0.28.1"
-pydantic = {extras = ["dotenv"], version = "^1.10.2"}
+pydantic = "^2.8.2"
+pydantic_settings = "^2.3.4"
 pymysql = "^1.0.2"
 
 
