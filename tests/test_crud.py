@@ -189,7 +189,7 @@ def test_thermal_event_get_multi():
     expected = [x.id for x in thermal_events]
 
     # Retrieve the thermal events and their ids
-    thermal_events_read = crud.thermal_event.get_multi(limit=nb)
+    thermal_events_read = crud.thermal_event.get_multi(range(nb + 1))
     actual = [x.id for x in thermal_events_read]
 
     assert actual == expected
@@ -487,7 +487,7 @@ def test_strike_line_descriptor_get_multi():
     expected = [x.id for x in descriptors]
 
     # Retrieve the descriptors and their ids
-    descriptors_read = crud.strike_line_descriptor.get_multi(limit=nb)
+    descriptors_read = crud.strike_line_descriptor.get_multi(range(nb + 1))
     actual = [x.id for x in descriptors_read]
 
     assert actual == expected
