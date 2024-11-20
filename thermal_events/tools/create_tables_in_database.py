@@ -11,8 +11,12 @@ from thermal_events import (
     ThermalEventCategoryLineOfSight,
     Method,
     Severity,
+    ProcessedMovie,
+    ThermalEvent,
+    ThermalEventInstance,
 )
-from thermal_events.database import get_db
+from thermal_events.database import get_db, engine
+
 
 with get_db() as session:
     # Create the tables
@@ -140,3 +144,7 @@ with get_db() as session:
         ]
     )
     session.commit()
+
+ProcessedMovie.__table__.create(engine)
+ThermalEventInstance.__table__.create(engine)
+ThermalEvent.__table__.create(engine)

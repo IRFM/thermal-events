@@ -14,6 +14,7 @@ from .misc import (
     Method,
     Severity,
     ParentChildRelationship,
+    ProcessedMovie,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "Method",
     "Severity",
     "ParentChildRelationship",
+    "ProcessedMovie",
 ]

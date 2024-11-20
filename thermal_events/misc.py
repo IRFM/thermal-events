@@ -181,3 +181,56 @@ class ParentChildRelationship(Base):
         comment="Timestamp after which the splitting or merging happened, "
         + "in nanosecond",
     )
+
+
+PARAMETERS_LIMIT = 1024
+
+
+class ProcessedMovie(Base):
+    """Represents a processed infrared movie."""
+
+    __tablename__ = "processed_movies"
+    id = Column(
+        BigIntegerType, primary_key=True, autoincrement=True, index=True, unique=True
+    )
+
+    experiment_id = Column(BigIntegerType, nullable=False, comment="Experiment id")
+    line_of_sight = Column(
+        String(255),
+        ForeignKey("lines_of_sight.name"),
+        index=True,
+        comment="Line of sight",
+    )
+    method = Column(
+        String(255),
+        nullable=False,
+        comment="The detection method",
+    )
+    parameters = Column(
+        String(PARAMETERS_LIMIT), nullable=False, comment="Parameters of the method"
+    )
+    comments = Column(String(255), comment="Comments describing the thermal event")
+
+    def __init__(
+        self,
+        experiment_id: int,
+        line_of_sight: str,
+        method: str,
+        parameters: str,
+        comments: str = "",
+    ) -> None:
+        """
+        Initialize a ProcessedMovie.
+
+        """
+        if len(parameters) > PARAMETERS_LIMIT:
+            print(
+                f"Warning: the provided parameters are too long, truncating them to {PARAMETERS_LIMIT} characters"
+            )
+            parameters = parameters[:PARAMETERS_LIMIT]
+
+        self.experiment_id = experiment_id
+        self.line_of_sight = line_of_sight
+        self.method = method
+        self.parameters = parameters
+        self.comments = comments

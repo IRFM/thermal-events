@@ -10,6 +10,7 @@ from .misc import (
     method,
     device,
     severity,
+    processed_movie,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "method",
     "device",
     "severity",
+    "processed_movie",
 ]

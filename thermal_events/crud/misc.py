@@ -1,15 +1,20 @@
-from thermal_events.crud.base import CRUDBase, session_scope
+from typing import Union
+
+from sqlalchemy import or_
+
 from thermal_events import (
-    LineOfSight,
+    AnalysisStatus,
     Category,
+    Dataset,
+    Device,
+    LineOfSight,
+    Method,
+    ProcessedMovie,
+    Severity,
     ThermalEventCategoryLineOfSight,
     User,
-    Dataset,
-    AnalysisStatus,
-    Method,
-    Device,
-    Severity,
 )
+from thermal_events.crud.base import CRUDBase, session_scope
 
 
 class CRUDUser(CRUDBase[User]):
@@ -198,6 +203,81 @@ class CRUDSeverity(CRUDBase[Severity]):
             return [x[0] for x in res]
 
 
+class CRUDProcessedMovie(CRUDBase[ProcessedMovie]):
+    """CRUD operations for ProcessedMovie objects."""
+
+    def get_by_columns(
+        self,
+        **kwargs,
+    ):
+        """Retrieve ProcessedMovie objects based on specified columns and filter
+        conditions.
+
+        Args:
+            **kwargs:
+                Filter conditions for the query.
+
+        Returns:
+            list:
+                Resulting ProcessedMovie objects.
+
+        """
+        with session_scope() as session:
+
+            query = session.query(ProcessedMovie)
+
+            if "experiment_id" in kwargs:
+                kwargs["experiment_id"] = int(kwargs["experiment_id"])
+
+            if "dataset" in kwargs:
+                dataset = kwargs.pop("dataset")
+                if isinstance(dataset, list):
+                    cond = ()
+                    for dat in dataset:
+                        cond += (ProcessedMovie.dataset.like(f"%{dat}%"),)
+                    query = query.filter(or_(*cond))
+                else:
+                    query = query.filter(ProcessedMovie.dataset.like(f"%{dataset}%"))
+
+            if "method" in kwargs:
+                method = kwargs.pop("method")
+                query = query.filter(ProcessedMovie.method.like(f"%{method}%"))
+
+            if "line_of_sight" in kwargs:
+                line_of_sight = kwargs.pop("line_of_sight")
+                query = query.filter(
+                    ProcessedMovie.line_of_sight.like(f"%{line_of_sight}%")
+                )
+
+            if "category" in kwargs:
+                event = kwargs.pop("category")
+                query = query.filter(ProcessedMovie.category.like(f"%{event}%"))
+
+            query = query.filter_by(**kwargs)
+
+            return query.all()
+
+    def delete(self, processed_movies: Union[list, ProcessedMovie, int]):
+        """Delete ProcessedMovie objects from the database.
+
+        Args:
+            processed_movies (Union[list, ProcessedMovie, int]):
+                List of ProcessedMovie objects, single ProcessedMovie object, or id(s) of
+                ProcessedMovie(s) to delete.
+
+        """
+        if not isinstance(processed_movies, list):
+            processed_movies = [processed_movies]
+
+        with session_scope() as session:
+            for processed_movie in processed_movies:
+                if isinstance(processed_movie, ProcessedMovie):
+                    processed_movie = processed_movie.id
+
+                session.query(ProcessedMovie).filter_by(id=processed_movie).delete()
+            session.commit()
+
+
 user = CRUDUser(User)
 thermal_event_category = CRUDThermalEventCategory(Category)
 dataset = CRUDDataset(Dataset)
@@ -206,3 +286,4 @@ line_of_sight = CRUDLineOfSight(LineOfSight)
 method = CRUDMethod(Method)
 device = CRUDDevice(Device)
 severity = CRUDSeverity(Severity)
+processed_movie = CRUDProcessedMovie(ProcessedMovie)
