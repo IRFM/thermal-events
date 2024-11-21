@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from datetime import datetime
 
 from .base import Base
 from .thermal_event_instance import BigIntegerType
@@ -209,6 +210,9 @@ class ProcessedMovie(Base):
     parameters = Column(
         String(PARAMETERS_LIMIT), nullable=False, comment="Parameters of the method"
     )
+    processing_date = Column(
+        DateTime, nullable=False, comment="Date of processing of the movie"
+    )
     comments = Column(String(255), comment="Comments describing the thermal event")
 
     def __init__(
@@ -234,3 +238,4 @@ class ProcessedMovie(Base):
         self.method = method
         self.parameters = parameters
         self.comments = comments
+        self.processing_date = datetime.now()
