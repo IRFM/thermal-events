@@ -1,10 +1,16 @@
+import time
 from contextlib import contextmanager
 from typing import Any, Generic, List, Optional, Type, TypeVar, Union
+
+from sqlalchemy.exc import OperationalError
 
 from thermal_events import Base
 from thermal_events.database import get_db
 
 ModelType = TypeVar("ModelType", bound=Base)
+
+MAX_RETRIES = 3  # Number of retries
+RETRY_DELAY = 2  # Seconds between retries
 
 
 @contextmanager
@@ -21,7 +27,18 @@ def session_scope():
     session = get_db()
     try:
         yield session
-        # session.commit()
+        for attempt in range(MAX_RETRIES):
+            try:
+                session.commit()
+                break  # Success, exit loop
+            except OperationalError as e:
+                if "Deadlock found" in str(e):
+                    print(f"Deadlock detected. Retrying {attempt+1}/{MAX_RETRIES}...")
+                    time.sleep(RETRY_DELAY)  # Wait before retrying
+                else:
+                    raise  # Other errors should not be retried
+        else:
+            raise Exception("Transaction failed after multiple retries.")
     except:
         session.rollback()
         raise
