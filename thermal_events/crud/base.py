@@ -101,7 +101,6 @@ class CRUDBase(Generic[ModelType]):
 
         with session_scope() as session:
             session.add_all(obj_in)
-            session.commit()
 
     def update(self, obj_in: Union[ModelType, List[ModelType]]) -> None:
         """Update an existing object or a list of objects.
@@ -116,4 +115,3 @@ class CRUDBase(Generic[ModelType]):
         with session_scope() as session:
             for obj in obj_in:
                 session.merge(obj)
-            session.commit()

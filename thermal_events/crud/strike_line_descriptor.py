@@ -91,7 +91,6 @@ class CRUDStrikeLineDescriptor(CRUDBase[StrikeLineDescriptor]):
         with session_scope() as session:
             for obj in obj_in:
                 session.merge(obj)
-            session.commit()
 
     def delete(self, obj_in: Union[list, StrikeLineDescriptor, int]):
         """Delete StrikeLineDescriptor objects from the database.
@@ -111,7 +110,6 @@ class CRUDStrikeLineDescriptor(CRUDBase[StrikeLineDescriptor]):
                     obj = obj.id
 
                 session.query(StrikeLineDescriptor).filter_by(id=obj).delete()
-            session.commit()
 
 
 strike_line_descriptor = CRUDStrikeLineDescriptor(StrikeLineDescriptor)
