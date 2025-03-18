@@ -376,7 +376,6 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
             session.query(ThermalEvent).filter_by(id=event_id).update(
                 {"analysis_status": new_status}
             )
-            session.commit()
 
     def change_severity(self, event_id: int, new_severity: str):
         """Change the severity of a ThermalEvent.
@@ -392,7 +391,6 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
             session.query(ThermalEvent).filter_by(id=event_id).update(
                 {"severity": new_severity}
             )
-            session.commit()
 
     def update(self, obj_in: Union[ThermalEvent, List[ThermalEvent]]) -> None:
         """Update an existing object or a list of ThermalEvent objects.
@@ -411,7 +409,6 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
                     session.delete(obj)
                 else:
                     session.merge(obj)
-            session.commit()
 
     def delete(self, events: Union[list, ThermalEvent, int]):
         """Delete ThermalEvent objects from the database.
@@ -431,7 +428,6 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
                     event = event.id
 
                 session.query(ThermalEvent).filter_by(id=event).delete()
-            session.commit()
 
 
 thermal_event = CRUDThermalEvent(ThermalEvent)
