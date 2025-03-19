@@ -34,12 +34,13 @@ def session_scope():
             except OperationalError as e:
                 if "Deadlock found" in str(e):
                     print(f"Deadlock detected. Retrying {attempt+1}/{MAX_RETRIES}...")
+                    session.rollback()
                     time.sleep(RETRY_DELAY)  # Wait before retrying
                 else:
                     raise  # Other errors should not be retried
         else:
             raise Exception("Transaction failed after multiple retries.")
-    except:
+    except Exception:
         session.rollback()
         raise
     finally:
