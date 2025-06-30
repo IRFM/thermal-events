@@ -59,6 +59,10 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
                 method = kwargs.pop("method")
                 query = query.filter(ThermalEvent.method.like(f"%{method}%"))
 
+            if "comments" in kwargs:
+                comments = kwargs.pop("comments")
+                query = query.filter(ThermalEvent.comments.like(f"%{comments}%"))
+
             if "line_of_sight" in kwargs:
                 line_of_sight = kwargs.pop("line_of_sight")
                 query = query.filter(
