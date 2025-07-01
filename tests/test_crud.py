@@ -396,20 +396,31 @@ def test_thermal_event_get_by_device():
 
 def test_thermal_event_get_by_dataset():
     # Generate random thermal events with different datasets
-    datasets = ["1", "2", "3", "1, 2", "2, 3"]
-    dataset_counts = [random.randrange(1, 10) for _ in datasets]
+    query_datasets = ["1", 2, "3", "1, 2", [2, 3]]
+    datasets = ["1", "2", "3", "10", "12", "20", "1,3", "3, 12"]
 
     thermal_events = []
-    for ind, dataset in enumerate(datasets):
-        for _ in range(dataset_counts[ind]):
-            thermal_events.append(random_event(10))
+    for dataset in datasets:
+        for _ in range(random.randrange(1, 10)):
+            thermal_events.append(random_event(20))
             thermal_events[-1].dataset = dataset
 
     # Send the thermal events to the database
     crud.thermal_event.create(thermal_events)
 
-    for ind, dataset in enumerate(datasets):
-        expected = [x.id for x in thermal_events if dataset in x.dataset]
+    for dataset in query_datasets:
+        expected = []
+        for thermal_event in thermal_events:
+            te_datasets = [int(y) for y in thermal_event.dataset.split(",")]
+            if isinstance(dataset, str):
+                q_datasets = [int(y) for y in dataset.split(",")]
+            elif isinstance(dataset, list):
+                q_datasets = dataset
+            elif isinstance(dataset, int):
+                q_datasets = [dataset]
+
+            if any(element in te_datasets for element in q_datasets):
+                expected.append(thermal_event.id)
 
         actual = crud.thermal_event.get_by_dataset(dataset, return_columns=["id"])
         assert sorted(actual) == sorted(expected)
