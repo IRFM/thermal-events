@@ -47,13 +47,17 @@ class CRUDThermalEvent(CRUDBase[ThermalEvent]):
 
             if "dataset" in kwargs:
                 dataset = kwargs.pop("dataset")
-                if isinstance(dataset, list):
-                    cond = ()
-                    for dat in dataset:
-                        cond += (ThermalEvent.dataset.like(f"%{dat}%"),)
-                    query = query.filter(or_(*cond))
-                else:
-                    query = query.filter(ThermalEvent.dataset.like(f"%{dataset}%"))
+                if isinstance(dataset, str):
+                    dataset = [int(x) for x in dataset.split(",")]
+                elif isinstance(dataset, int):
+                    dataset = [dataset]
+
+                cond = ()
+                for dat in dataset:
+                    cond += (
+                        ThermalEvent.dataset.op("REGEXP")(rf"(^|,\s*)\s*{dat}\s*(,|$)"),
+                    )
+                query = query.filter(or_(*cond))
 
             if "method" in kwargs:
                 method = kwargs.pop("method")
